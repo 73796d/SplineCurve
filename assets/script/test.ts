@@ -21,23 +21,27 @@ export default class Test extends cc.Component {
 
     start () {
         this.clearDraw()
+        this.drawLine(cc.v2(0, 0), cc.v2(300, 300));
         this.drawPoint();
-        this.drawLine();
     }
     drawPoint() {
-        this.graphics.circle(0, 0, 6);
-        this.graphics.fillColor = cc.Color.YELLOW;
-        this.graphics.fill();
+        this.graphics.fillColor.fromHEX("#ff0000");
+        // = cc.Color.YELLOW;
+        this.graphics.circle(300, 300, 6);
         this.graphics.stroke();
+        this.graphics.fill();
     }
 
-    drawLine() {
+    drawLine(p0: cc.Vec2, p1: cc.Vec2) {
         this.graphics.lineWidth = 3;
         this.graphics.strokeColor = cc.Color.GREEN;
-        this.graphics.lineCap = cc.Graphics.LineCap.ROUND;
-        this.graphics.moveTo(100, 100);
-        this.graphics.lineTo(300, 300);
+        this.graphics.fillColor = cc.Color.GREEN;
+        this.graphics.lineCap = cc.Graphics.LineCap.BUTT;
+        this.graphics.lineJoin = cc.Graphics.LineJoin.ROUND;
+        this.graphics.moveTo(p0.x, p0.y);
+        this.graphics.lineTo(p1.x, p1.y);
         this.graphics.stroke();
+        this.graphics.fill();
     }
 
 
