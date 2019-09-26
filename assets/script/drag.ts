@@ -19,7 +19,7 @@ export default class NewClass extends cc.Component {
         this.node.on(cc.Node.EventType.TOUCH_MOVE, (touchEvent:cc.Event.EventTouch)=>{
             let location = touchEvent.getDelta();
             this.node.position = cc.v2(this.node.x + location.x, this.node.y + location.y);
-        })
+        }, this);
     }
 
 }
