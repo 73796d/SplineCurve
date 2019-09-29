@@ -1,4 +1,5 @@
 import BaseDraw from "./basedraw";
+import CubicBezier from "./cubicbezier";
 
 const {ccclass, property} = cc._decorator;
 
@@ -7,6 +8,8 @@ export default class Test extends BaseDraw {
 
     @property(cc.Prefab)
     point: cc.Prefab = null;
+
+    bezierList: Array<CubicBezier> = new Array(); 
 
     start () {
         this.clearDraw()
@@ -19,6 +22,9 @@ export default class Test extends BaseDraw {
     }
 
     drawBezierCurve(p0: cc.Vec2, p1: cc.Vec2, p2:  cc.Vec2, p3:  cc.Vec2) {
+        let cubicbezier = new CubicBezier(p0, p1, p2, p3);
+        this.bezierList.push(cubicbezier);
+
         this.graphics.moveTo(p0.x, p0.y);
         this.graphics.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
         this.graphics.stroke();
