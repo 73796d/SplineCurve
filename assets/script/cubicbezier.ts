@@ -79,6 +79,38 @@ export default class CubicBezier {
         return retn;
     }
 
+    getPoint(t: number): cc.Vec2 {
+        let x: number, y: number;
+        let oneMinusT = 1 - t;
+        let quadraticT = Math.pow(t, 2);
+        let cubicT = Math.pow(t, 3);
+        let quadraticOMT = Math.pow(oneMinusT, 2);
+        let cubicOMT = Math.pow(oneMinusT, 3);
+
+        x = cubicOMT * this.p0.x + 3 * t * quadraticOMT * this.p1.x + 3 * quadraticT * oneMinusT * this.p2.x + cubicT * this.p3.x;
+        y = cubicOMT * this.p0.y + 3 * t * quadraticOMT * this.p1.y + 3 * quadraticT * oneMinusT * this.p2.y + cubicT * this.p3.y;
+        return cc.v2(x, y);
+    }
+
+    getFirstDerivative(t: number): cc.Vec2 {
+        let x: number, y: number;
+        let oneMinusT = 1 - t;
+        let quadraticT = Math.pow(t, 2);
+        let quadraticOMT = Math.pow(oneMinusT, 2);
+
+        x = 3 * quadraticOMT * (this.p1.x - this.p0.x) + 6 * oneMinusT * t * (this.p2.x - this.p1.x) + 3 * quadraticT * (this.p3.x - this.p2.x);
+        y = 3 * quadraticOMT * (this.p1.y - this.p0.y) + 6 * oneMinusT * t * (this.p2.y - this.p1.y) + 3 * quadraticT * (this.p3.y - this.p2.y);
+        return cc.v2(x, y);
+    }
+
+    getVelocity(t: number): cc.Vec2{
+        return this.getFirstDerivative(t);
+    } 
+
+    getDirection(t: number) {
+        let vel = this.getVelocity(t);
+        return vel.normalize();
+    }
 
     /**
      * 求t时刻的真实时间
@@ -121,6 +153,16 @@ export default class CubicBezier {
             t1 = t2;
         } while (true);
 
+        return t2;
+    }
+    
+    invert(t: number, l: number) {
+        let t1 = t, t2: number;
+        do {
+            t2 = t1 - (this.length(t1) - l) / this.bezeSpeed(t1);
+            if (Math.abs(t1 - t2) < 0.00001) break;
+            t1 = t2;
+        } while (true);
         return t2;
     }
 
