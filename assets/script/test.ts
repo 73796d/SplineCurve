@@ -18,7 +18,7 @@ export default class Test extends BaseDraw {
         this.drawCirclePoint(cc.v2(100, 40), cc.Color.GREEN, 6, false);
         this.drawRectPoint(cc.v2(100, 80), cc.Color.RED, 7, true);
         this.drawRectPoint(cc.v2(100, 120), cc.Color.RED, 7, false);
-        this.drawBezierCurve(cc.v2(0, 0), cc.v2(100, 0), cc.v2(200,0), cc.v2(300, 0));
+        this.drawBezierCurve(cc.v2(-640, -300), cc.v2(-640, 300), cc.v2(640, 300), cc.v2(640, -300));
     }
 
     drawBezierCurve(p0: cc.Vec2, p1: cc.Vec2, p2:  cc.Vec2, p3:  cc.Vec2) {
@@ -45,6 +45,24 @@ export default class Test extends BaseDraw {
         point = cc.instantiate(this.point);
         point.setPosition(p2);
         point.parent = this.node;
+
+
+        let fd = cubicbezier.getFirstDerivative(0.5);
+        let d = cubicbezier.getVelocity(0.5);
+        let v = cubicbezier.getDirection(0.5);
+
+        len = Math.floor(cubicbezier.length(1));
+        // 分割份数为曲线的长度
+        for (let j = 0; j < 100; j += 1) {
+            let t = j / 100;
+            const l = t * len;
+            t = cubicbezier.invert(t, l);
+
+            let point = cubicbezier.getPoint(t);
+            let color = cc.color(Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
+            this.drawCirclePoint(point, color, 8, true);
+        }
+
 
     }
 }
