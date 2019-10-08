@@ -18,7 +18,7 @@ export default class Test extends BaseDraw {
         this.drawCirclePoint(cc.v2(100, 40), cc.Color.GREEN, 6, false);
         this.drawRectPoint(cc.v2(100, 80), cc.Color.RED, 7, true);
         this.drawRectPoint(cc.v2(100, 120), cc.Color.RED, 7, false);
-        this.drawBezierCurve(cc.v2(0, 0), cc.v2(100, 0), cc.v2(200,0), cc.v2(300, 0));
+        this.drawBezierCurve(cc.v2(0, 0), cc.v2(100, 300), cc.v2(-100,100), cc.v2(300, 150));
     }
 
     drawBezierCurve(p0: cc.Vec2, p1: cc.Vec2, p2:  cc.Vec2, p3:  cc.Vec2) {
@@ -26,6 +26,9 @@ export default class Test extends BaseDraw {
         this.bezierList.push(cubicbezier);
 
         let len = cubicbezier.length(1);
+
+        let t1 = cubicbezier.t2rt(0.2);
+        let t2 = cubicbezier.t2rt2(0.2);
 
         this.graphics.moveTo(p0.x, p0.y);
         this.graphics.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);

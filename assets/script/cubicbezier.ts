@@ -50,7 +50,7 @@ export default class CubicBezier {
      * @param t 时间
      * x坐标
      */
-    b3(t: number): number {
+    b3X(t: number): number {
         let retn: number;
         let oneMinusT = 1 - t;
         let quadraticT = Math.pow(t, 2);
@@ -63,6 +63,24 @@ export default class CubicBezier {
     }
 
     /**
+     * 时间t的y坐标
+     * @param t 时间
+     * x坐标
+     */
+    b3Y(t: number): number {
+        let retn: number;
+        let oneMinusT = 1 - t;
+        let quadraticT = Math.pow(t, 2);
+        let cubicT = Math.pow(t, 3);
+        let quadraticOMT = Math.pow(oneMinusT, 2);
+        let cubicOMT = Math.pow(oneMinusT, 3);
+
+        retn = cubicOMT * this.p0.y + 3 * t * quadraticOMT * this.p1.y + 3 * quadraticT * oneMinusT * this.p2.y + cubicT * this.p3.y;
+        return retn;
+    }
+
+
+    /**
      * 求t时刻的真实时间
      * @param t 时间 
      * @returns 真实时间
@@ -71,7 +89,7 @@ export default class CubicBezier {
         let realTime: number, deltaTime: number;
 	    let bezierX: number;
 
-	    let x = 100 + (this.p3.x - this.p0.x) * t;
+	    let x = this.p0.x + (this.p3.x - this.p0.x) * t;
 	    realTime = 1;
 	    deltaTime = 0.0;
 
@@ -82,10 +100,28 @@ export default class CubicBezier {
 			    realTime += realTime / 2;
 		    }
 
-		    bezierX = this.b3(realTime);
+		    bezierX = this.b3X(realTime);
 		    deltaTime = bezierX - x;
-	    } while (deltaTime != 0);
+	    } while (deltaTime > 0.0000001);
 	    return realTime;
+    }
+
+    t2rt2(t: number) {
+        let totalLength = this.length(1);
+        let len = t * totalLength;
+        let t1 = t, t2: any;
+        let dt;
+
+        do {
+            t2 = t1 - (this.length(t1) - len) / this.bezeSpeed(t1);
+            dt = Math.abs(t1 - t2);
+            if (dt < 0.00001) {
+                break;
+            }
+            t1 = t2;
+        } while (true);
+
+        return t2;
     }
 
     /**
@@ -94,35 +130,28 @@ export default class CubicBezier {
      * @returns 曲线长度
      */
     length(t: number) {
-        let TOTAL_SIMPSON_STEP: number;
-        let stepCounts: number;
+        let TOTAL_SIMPSON_STEP: number = 100000;
+        let stepCounts: number = TOTAL_SIMPSON_STEP * t;
         let halfCounts: number;
         let i = 0;
         let sum1 = 0, sum2 = 0, dStep: number;
 
-        TOTAL_SIMPSON_STEP = 100000;
-        stepCounts = TOTAL_SIMPSON_STEP * t;
-
-        if (stepCounts == 0)
-        {
+        if (stepCounts == 0) {
             return 0;
         }
-        if (stepCounts % 2 == 0)
-        {
+        if (stepCounts % 2 == 0) { // 偶数
             stepCounts++;
         }
 
         halfCounts = stepCounts / 2;
         dStep = t / stepCounts;
 
-        while (i < halfCounts)
-        {
+        while (i < halfCounts) {
             sum1 += this.bezeSpeed((2 * i + 1) * dStep);
             i++;
         }
         i = 1;
-        while (i < halfCounts)
-        {
+        while (i < halfCounts) {
             sum2 += this.bezeSpeed(2 * i * dStep);
             i++;
         }
