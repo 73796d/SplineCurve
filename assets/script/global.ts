@@ -4,7 +4,7 @@ export default class Global {
     private static instance_: Global = new Global();
     private static eventListenter_: EventListener = new EventListener();
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): Global {
         return Global.instance_;

@@ -9,7 +9,7 @@ export interface EventsType {
 
 export default class EventListener {
 	es: EventsType = {};
-	
+
 	on(eventName: string, cb: Function, once: boolean = false) {
 		if (!this.es[eventName]) {
 			this.es[eventName] = [];

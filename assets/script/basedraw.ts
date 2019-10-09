@@ -1,9 +1,9 @@
-const {ccclass, property} = cc._decorator;
+const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class BaseDraw extends cc.Component {
     private graphics_: cc.Graphics; // undefined
-    
+
     /// getter, setter
     public get graphics(): cc.Graphics {
         return this.graphics_;
@@ -12,12 +12,12 @@ export default class BaseDraw extends cc.Component {
         this.graphics_ = value;
     }
 
-    onLoad () {
+    onLoad() {
         if (!this.graphics) {
             this.graphics = this.addComponent(cc.Graphics);
         } else {
             this.graphics = this.getComponent(cc.Graphics);
-        }  
+        }
     }
 
     /**
@@ -59,7 +59,7 @@ export default class BaseDraw extends cc.Component {
         this.setStrokeColor(color);
         this.graphics.circle(p0.x, p0.y, size);
         this.graphics.stroke();
-        if ( isFill ) {
+        if (isFill) {
             this.setFillColor(color);
             this.graphics.fill();
         }
@@ -72,7 +72,7 @@ export default class BaseDraw extends cc.Component {
         this.setStrokeColor(color);
         this.graphics.rect(p0.x, p0.y, size, size);
         this.graphics.stroke();
-        if ( isFill ) {
+        if (isFill) {
             this.setFillColor(color);
             this.graphics.fill();
         }
@@ -94,7 +94,7 @@ export default class BaseDraw extends cc.Component {
      * @param p2 控制点2
      * @param p3 终点
      */
-    drawBezierCurve(p0: cc.Vec2, p1: cc.Vec2, p2:  cc.Vec2, p3:  cc.Vec2) {
+    drawBezierCurve(p0: cc.Vec2, p1: cc.Vec2, p2: cc.Vec2, p3: cc.Vec2) {
         this.graphics.moveTo(p0.x, p0.y);
         this.graphics.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
         this.graphics.stroke();

@@ -31,7 +31,7 @@ export default class CubicBezier {
     public set p1(value: cc.Vec2) {
         this.p1_ = value;
     }
-    
+
     public get p2(): cc.Vec2 {
         return this.p2_;
     }
@@ -103,9 +103,9 @@ export default class CubicBezier {
         return cc.v2(x, y);
     }
 
-    getVelocity(t: number): cc.Vec2{
+    getVelocity(t: number): cc.Vec2 {
         return this.getFirstDerivative(t);
-    } 
+    }
 
     getDirection(t: number) {
         let vel = this.getVelocity(t);
@@ -119,23 +119,23 @@ export default class CubicBezier {
      */
     t2rt(t: number) {
         let realTime: number, deltaTime: number;
-	    let bezierX: number;
+        let bezierX: number;
 
-	    let x = this.p0.x + (this.p3.x - this.p0.x) * t;
-	    realTime = 1;
-	    deltaTime = 0.0;
+        let x = this.p0.x + (this.p3.x - this.p0.x) * t;
+        realTime = 1;
+        deltaTime = 0.0;
 
-	    do {
-		    if (deltaTime > 0) {
-			    realTime -= realTime / 2;
-		    } else {
-			    realTime += realTime / 2;
-		    }
+        do {
+            if (deltaTime > 0) {
+                realTime -= realTime / 2;
+            } else {
+                realTime += realTime / 2;
+            }
 
-		    bezierX = this.b3X(realTime);
-		    deltaTime = bezierX - x;
-	    } while (deltaTime > 0.0000001);
-	    return realTime;
+            bezierX = this.b3X(realTime);
+            deltaTime = bezierX - x;
+        } while (deltaTime > 0.0000001);
+        return realTime;
     }
 
     t2rt2(t: number) {
@@ -155,7 +155,7 @@ export default class CubicBezier {
 
         return t2;
     }
-    
+
     invert(t: number, l: number) {
         let t1 = t, t2: number;
         do {
@@ -205,8 +205,7 @@ export default class CubicBezier {
      * @param t 时间
      * @returns x方向速度分量
      */
-    bezeSpeedX(t: number)
-    {
+    bezeSpeedX(t: number) {
         let oneMinusT = 1 - t;
         let quadraticT = Math.pow(t, 2);
         let quadraticOMT = Math.pow(oneMinusT, 2);
@@ -218,8 +217,7 @@ export default class CubicBezier {
      * @param t 时间
      * @returns y方向速度分量 
      */
-    bezeSpeedY(t: number)
-    {
+    bezeSpeedY(t: number) {
         let oneMinusT = 1 - t;
         let quadraticT = Math.pow(t, 2);
         let quadraticOMT = Math.pow(oneMinusT, 2);
@@ -231,8 +229,7 @@ export default class CubicBezier {
      * @param t 时间
      * @returns 速度
      */
-    bezeSpeed(t: number)
-    {
+    bezeSpeed(t: number) {
         let vx = this.bezeSpeedX(t);
         let vy = this.bezeSpeedY(t);
         return Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
