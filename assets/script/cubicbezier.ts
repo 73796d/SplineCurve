@@ -142,7 +142,7 @@ export default class CubicBezier {
         let totalLength = this.length(1);
         let len = t * totalLength;
         let t1 = t, t2: any;
-        let dt;
+        let dt: number;
 
         do {
             t2 = t1 - (this.length(t1) - len) / this.bezeSpeed(t1);

@@ -1,7 +1,9 @@
+import Global from "./global";
+
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class NewClass extends cc.Component {
+export default class Drag extends cc.Component {
 
     getWorldPos(): cc.Vec2 {
         let nodePos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
@@ -16,9 +18,22 @@ export default class NewClass extends cc.Component {
     }
 
     onLoad() {
+        this.node.on(cc.Node.EventType.TOUCH_START, (touchEvent: cc.Event.EventTouch) => {
+            return false;
+        }, this);
+
         this.node.on(cc.Node.EventType.TOUCH_MOVE, (touchEvent: cc.Event.EventTouch) => {
             let location = touchEvent.getDelta();
             this.node.position = cc.v2(this.node.x + location.x, this.node.y + location.y);
+            Global.eventListener.fire("DRAG_MOVE", this.getWorldPos());
+        }, this);
+
+        this.node.on(cc.Node.EventType.TOUCH_END, (touchEvent: cc.Event.EventTouch) => {
+
+        }, this);
+
+        this.node.on(cc.Node.EventType.TOUCH_CANCEL, (touchEvent: cc.Event.EventTouch) => {
+
         }, this);
     }
 

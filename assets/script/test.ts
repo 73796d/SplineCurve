@@ -1,5 +1,6 @@
 import BaseDraw from "./basedraw";
 import CubicBezier from "./cubicbezier";
+import Global from "./global";
 
 const { ccclass, property } = cc._decorator;
 
@@ -12,13 +13,19 @@ export default class Test extends BaseDraw {
     bezierList: Array<CubicBezier> = new Array();
 
     start() {
-        this.clearDraw()
-        this.drawLine(cc.v2(0, 0), cc.v2(-300, -300), cc.Color.GREEN, 2);
-        this.drawCirclePoint(cc.v2(100, 10), cc.Color.RED, 6, true);
-        this.drawCirclePoint(cc.v2(100, 40), cc.Color.GREEN, 6, false);
-        this.drawRectPoint(cc.v2(100, 80), cc.Color.RED, 7, true);
-        this.drawRectPoint(cc.v2(100, 120), cc.Color.RED, 7, false);
+        // this.clearDraw()
+        // this.drawLine(cc.v2(0, 0), cc.v2(-300, -300), cc.Color.GREEN, 2);
+        // this.drawCirclePoint(cc.v2(100, 10), cc.Color.RED, 6, true);
+        // this.drawCirclePoint(cc.v2(100, 40), cc.Color.GREEN, 6, false);
+        // this.drawRectPoint(cc.v2(100, 80), cc.Color.RED, 7, true);
+        // this.drawRectPoint(cc.v2(100, 120), cc.Color.RED, 7, false);
         this.drawBezierCurve(cc.v2(-640, -300), cc.v2(-640, 300), cc.v2(640, 300), cc.v2(640, -300));
+    }
+    onLoad() {
+        super.onLoad();
+        Global.eventListener.on("DRAG_MOVE", (pos: cc.Vec2) => {
+            cc.log(pos);
+        })
     }
 
     drawBezierCurve(p0: cc.Vec2, p1: cc.Vec2, p2: cc.Vec2, p3: cc.Vec2) {
@@ -64,7 +71,5 @@ export default class Test extends BaseDraw {
             let color = cc.color(Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
             this.drawCirclePoint(point, color, 8, true);
         }
-
-
     }
 }
