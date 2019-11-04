@@ -1,23 +1,68 @@
 import BaseDraw from "./basedraw";
 import PointMgr from "./pointmgr";
 import BezierNode from "./beziernode";
+import Global from "./global";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class Test extends BaseDraw {
+    @property(cc.Node)
+    frame: cc.Node = null;
+
     pointMgr:PointMgr = null; // 点管理器
     bezierNodeList: Array<BezierNode> = new Array();
 
     onLoad() {
         super.onLoad();
         this.pointMgr = cc.find("Canvas/PointMgr").getComponent(PointMgr);
+        Global.eventListener.on("ADD_SPLINE", () => {
+            this.addBezeerNode();
+        });
+        Global.eventListener.on("EDITOR_SCALE_SMALL", () => {
+            let scale = this.node.scale;
+            this.node.scale = scale * 0.5;
+            this.frame.scale = scale * 0.5;
+        });
+
+        Global.eventListener.on("EDITOR_SCALE_BIG", () => {
+            let scale = this.node.scale;
+            this.node.scale = scale * 2;
+            this.frame.scale = scale * 2;
+        });
+        
+        Global.eventListener.on("EDITOR_SCALE_RESTORE", () => {
+            this.node.scale = 1;
+            this.frame.scale = 1;
+            this.node.position = cc.v2(0, 0);
+            this.frame.position = cc.v2(0, 0);
+        });
+
+        Global.eventListener.on("ARROW_L", () => {
+            let pos = this.node.position;
+            this.node.position = pos.add(cc.v2(-10, 0));
+            this.frame.position = pos.add(cc.v2(-10, 0));
+        });
+        Global.eventListener.on("ARROW_U", () => {
+            let pos = this.node.position;
+            this.node.position = pos.add(cc.v2(0, 10));
+            this.frame.position = pos.add(cc.v2(0, 10));
+        });
+        Global.eventListener.on("ARROW_R", () => {
+            let pos = this.node.position;
+            this.node.position = pos.add(cc.v2(10, 0));
+            this.frame.position = pos.add(cc.v2(10, 0));
+        });
+        Global.eventListener.on("ARROW_D", () => {
+            let pos = this.node.position;
+            this.node.position = pos.add(cc.v2(0, -10));
+            this.frame.position = pos.add(cc.v2(0, -10));
+        });
+        
+
         // Global.eventListener.on("DRAG_MOVE", (pos: cc.Vec2) => {
         //     cc.log(pos);
-        // })
-
-        this.addBezeerNode();
-        this.addBezeerNode();
+        // });
     }
 
     addBezeerNode() {
@@ -27,9 +72,13 @@ export default class Test extends BaseDraw {
             let p1 = this.pointMgr.createPoint();
             let p2 = this.pointMgr.createPoint();
             let p3 = this.pointMgr.createPoint();
+            p0.position = cc.v2(-640, 0);
+            p1.position = cc.v2(-500, 140);
+            p2.position = cc.v2(-500, -140);
+            p3.position = cc.v2(-360, 0);
             let bezierNode = new BezierNode(p0, p1, p2, p3);
             this.bezierNodeList.push(bezierNode);
-
+            
             this.node.addChild(p0);
             this.node.addChild(p1);
             this.node.addChild(p2);
@@ -40,6 +89,12 @@ export default class Test extends BaseDraw {
             let p1 = this.pointMgr.createPoint();
             let p2 = this.pointMgr.createPoint();
             let p3 = this.pointMgr.createPoint();
+
+            let p0x = p0.position.x;
+            let p0y = p0.position.y
+            p1.position = cc.v2(p0x + 140, p0y + 140);
+            p2.position = cc.v2(p0x + 140, p0y - 140);
+            p3.position = cc.v2(p0x + 280, p0y);
             let bezierNode = new BezierNode(p0, p1, p2, p3);
             this.bezierNodeList.push(bezierNode);
 
@@ -56,8 +111,7 @@ export default class Test extends BaseDraw {
                 let bezierNode = this.bezierNodeList[i];
                 bezierNode.updatePosition(dt);
 
-                this.setStrokeColor(cc.Color.RED);
-                this.setFillColor(cc.Color.RED);
+                this.setStrokeColor(cc.Color.BLUE);
                 this.setLineWidth(2);
                 this.drawBezierCurve(bezierNode.p0p, bezierNode.p1p, bezierNode.p2p, bezierNode.p3p);
                 this.drawLine(bezierNode.p0p, bezierNode.p1p, cc.Color.GREEN, 2);

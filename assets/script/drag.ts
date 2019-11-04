@@ -23,8 +23,9 @@ export default class Drag extends cc.Component {
         }, this);
 
         this.node.on(cc.Node.EventType.TOUCH_MOVE, (touchEvent: cc.Event.EventTouch) => {
-            let location = touchEvent.getDelta();
-            this.node.position = cc.v2(this.node.x + location.x, this.node.y + location.y);
+            // let location = touchEvent.getDelta();
+            // this.node.position = cc.v2(this.node.x + location.x, this.node.y + location.y);
+            this.setWorldPos(touchEvent.getLocation());
             Global.eventListener.fire("DRAG_MOVE", this.getWorldPos());
         }, this);
 
