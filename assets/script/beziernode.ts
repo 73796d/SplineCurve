@@ -1,36 +1,39 @@
-import BaseDraw from "./basedraw";
+import CubicBezier from "./cubicbezier";
 
-const {ccclass, property} = cc._decorator;
+export default class BezierNode {
+    p0: cc.Node = null;
+    p1: cc.Node = null;
+    p2: cc.Node = null;
+    p3: cc.Node = null;
 
-@ccclass
-export default class BezierNode extends BaseDraw {
+    p0p:cc.Vec2 = cc.Vec2.ZERO;
+    p1p:cc.Vec2 = cc.Vec2.ZERO;
+    p2p:cc.Vec2 = cc.Vec2.ZERO;
+    p3p:cc.Vec2 = cc.Vec2.ZERO;
 
-    @property(cc.Sprite)
-    P0: cc.Sprite = null;
+    cubicBezier: CubicBezier = null;
 
-    @property(cc.Sprite)
-    P1: cc.Sprite = null;
+    public constructor(p0: cc.Node, p1: cc.Node, p2: cc.Node, p3: cc.Node) {
+        this.p0 = p0;
+        this.p1 = p1;
+        this.p2 = p2;
+        this.p3 = p3;
+        this.cubicBezier = new CubicBezier();
+    }
 
-    @property(cc.Sprite)
-    P2: cc.Sprite = null;
+    updatePosition (dt) {
+        this.p0p = this.p0.position;
+        this.p1p = this.p1.position;
+        this.p2p = this.p2.position;
+        this.p3p = this.p3.position;
+        this.cubicBezier.p0 = this.p0p;
+        this.cubicBezier.p1 = this.p1p;
+        this.cubicBezier.p2 = this.p2p;
+        this.cubicBezier.p3 = this.p3p;
 
-    @property(cc.Sprite)
-    P3: cc.Sprite = null;
+    }
 
-    update (dt) {
-        let p0p = this.P0.node.position;
-        let p1p = this.P1.node.position;
-        let p2p = this.P2.node.position;
-        let p3p = this.P3.node.position;
-
-        this.clearDraw()
-        this.setStrokeColor(cc.Color.RED);
-        this.setFillColor(cc.Color.RED);
-        this.setLineWidth(2);
-        this.drawBezierCurve(p0p, p1p, p2p, p3p);
-        this.drawLine(p0p, p1p, cc.Color.GREEN, 2);
-        this.drawLine(p2p, p3p, cc.Color.GREEN, 2);
-        
-
+    getLength(t){
+        return this.cubicBezier.length(t);
     }
 }
