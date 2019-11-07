@@ -1,6 +1,12 @@
 import CubicBezier from "./cubicbezier";
-
 export default class BezierNode {
+    private index_: number = 0;
+    public get index(): number {
+        return this.index_;
+    }
+    public set index(value: number) {
+        this.index_ = value;
+    }
     p0: cc.Node = null;
     p1: cc.Node = null;
     p2: cc.Node = null;
@@ -21,7 +27,7 @@ export default class BezierNode {
         this.cubicBezier = new CubicBezier();
     }
 
-    updatePosition (dt) {
+    updatePosition (dt: any) {
         this.p0p = this.p0.position;
         this.p1p = this.p1.position;
         this.p2p = this.p2.position;
@@ -33,7 +39,7 @@ export default class BezierNode {
 
     }
 
-    getLength(t){
+    getLength(t: number){
         return this.cubicBezier.length(t);
     }
 }

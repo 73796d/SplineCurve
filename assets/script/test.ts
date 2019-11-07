@@ -59,10 +59,68 @@ export default class Test extends BaseDraw {
             this.frame.position = pos.add(cc.v2(0, -10));
         });
         
-
-        // Global.eventListener.on("DRAG_MOVE", (pos: cc.Vec2) => {
-        //     cc.log(pos);
-        // });
+        Global.eventListener.on("DRAG_START", (name: string) => {
+            cc.log("-----------DRAG_START-----------");
+            // name: NodeXXX
+            let index = Number(name.substring(4));
+            if (index == 0) { // 第一个端点
+                cc.log(0);
+            } else if (index > 0 && index % 3 == 0) { // 端点
+                let bezierIndex1 = index / 3 - 1;
+                let bezierIndex2 = index / 3;
+                let len = this.bezierNodeList.length;
+                if (len == bezierIndex2) { // 最后的端点
+                    cc.log(bezierIndex1);
+                } else {
+                    cc.log(bezierIndex1);
+                    cc.log(bezierIndex2);
+                }
+            } else if (index > 0 && index % 3 != 0) { // 控制点
+                let bezierIndex = Math.floor(index / 3);
+                cc.log(bezierIndex);
+            }
+            
+        });
+        Global.eventListener.on("DRAG_MOVE", (name: string) => {
+            // name: NodeXXX
+            let index = Number(name.substring(4));
+            if (index == 0) { // 第一个点
+                cc.log(0);
+            } else if (index > 0 && index % 3 == 0) { // 端点
+                let bezierIndex1 = index / 3 - 1;
+                let bezierIndex2 = index / 3;
+                let len = this.bezierNodeList.length;
+                if (len == bezierIndex2) { // 最后的端点
+                    cc.log(bezierIndex1);
+                } else {
+                    cc.log(bezierIndex1);
+                    cc.log(bezierIndex2);
+                }
+            } else if (index > 0 && index % 3 != 0) { // 控制点
+                let bezierIndex = Math.floor(index / 3);
+                cc.log(bezierIndex);
+            }
+        });
+        Global.eventListener.on("DRAG_END", (name: string) => {
+            // name: NodeXXX
+            let index = Number(name.substring(4));
+            if (index == 0) { // 第一个点
+                cc.log(0);
+            } else if (index > 0 && index % 3 == 0) { // 端点
+                let bezierIndex1 = index / 3 - 1;
+                let bezierIndex2 = index / 3;
+                let len = this.bezierNodeList.length;
+                if (len == bezierIndex2) { // 最后的端点
+                    cc.log(bezierIndex1);
+                } else {
+                    cc.log(bezierIndex1);
+                    cc.log(bezierIndex2);
+                }
+            } else if (index > 0 && index % 3 != 0) { // 控制点
+                let bezierIndex = Math.floor(index / 3);
+                cc.log(bezierIndex);
+            }
+        });
     }
 
     addBezeerNode() {
@@ -72,11 +130,16 @@ export default class Test extends BaseDraw {
             let p1 = this.pointMgr.createPoint();
             let p2 = this.pointMgr.createPoint();
             let p3 = this.pointMgr.createPoint();
+            p0.name = "Node0";
+            p1.name = "Node1";
+            p2.name = "Node2";
+            p3.name = "Node3";
             p0.position = cc.v2(-640, 0);
             p1.position = cc.v2(-500, 140);
             p2.position = cc.v2(-500, -140);
             p3.position = cc.v2(-360, 0);
             let bezierNode = new BezierNode(p0, p1, p2, p3);
+            bezierNode.index = 0;
             this.bezierNodeList.push(bezierNode);
             
             this.node.addChild(p0);
@@ -89,6 +152,10 @@ export default class Test extends BaseDraw {
             let p1 = this.pointMgr.createPoint();
             let p2 = this.pointMgr.createPoint();
             let p3 = this.pointMgr.createPoint();
+            let index = len * 3;
+            p1.name = "Node" + (index + 1);
+            p2.name = "Node" + (index + 2);
+            p3.name = "Node" + (index + 3);
 
             let p0x = p0.position.x;
             let p0y = p0.position.y
@@ -96,6 +163,7 @@ export default class Test extends BaseDraw {
             p2.position = cc.v2(p0x + 140, p0y - 140);
             p3.position = cc.v2(p0x + 280, p0y);
             let bezierNode = new BezierNode(p0, p1, p2, p3);
+            bezierNode.index = len;
             this.bezierNodeList.push(bezierNode);
 
             this.node.addChild(p1);

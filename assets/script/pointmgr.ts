@@ -31,7 +31,7 @@ export default class PointMgr extends cc.Component {
         this.pool = pool;
     }
 
-    public createPoint() {
+    public createPoint(): cc.Node {
         let point = null;
         if (this.pool.size() > 0) {
             point = this.pool.get();

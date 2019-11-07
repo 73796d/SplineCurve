@@ -42,4 +42,9 @@ export default class UI extends cc.Component {
     onClickArrowD() {
         Global.eventListener.fire("ARROW_D");
     }
+
+    onCheckEdit(toggle: cc.Toggle, customEventData) {
+        cc.log(toggle.isChecked)
+        Global.eventListener.fire("CHECK_EDIT");
+    }
 }
