@@ -1,7 +1,7 @@
 import BaseDraw from "./basedraw";
 import PointMgr from "./pointmgr";
 import BezierNode from "./beziernode";
-import Global from "./global";
+import Global, { ControlMode } from "./global";
 
 const { ccclass, property } = cc._decorator;
 
@@ -40,25 +40,36 @@ export default class Test extends BaseDraw {
 
         Global.eventListener.on("ARROW_L", () => {
             let pos = this.node.position;
-            this.node.position = pos.add(cc.v2(-10, 0));
-            this.frame.position = pos.add(cc.v2(-10, 0));
+            this.node.position = pos.add(cc.v2(-1, 0));
+            this.frame.position = pos.add(cc.v2(-1, 0));
         });
         Global.eventListener.on("ARROW_U", () => {
             let pos = this.node.position;
-            this.node.position = pos.add(cc.v2(0, 10));
-            this.frame.position = pos.add(cc.v2(0, 10));
+            this.node.position = pos.add(cc.v2(0, 1));
+            this.frame.position = pos.add(cc.v2(0, 1));
         });
         Global.eventListener.on("ARROW_R", () => {
             let pos = this.node.position;
-            this.node.position = pos.add(cc.v2(10, 0));
-            this.frame.position = pos.add(cc.v2(10, 0));
+            this.node.position = pos.add(cc.v2(1, 0));
+            this.frame.position = pos.add(cc.v2(1, 0));
         });
         Global.eventListener.on("ARROW_D", () => {
             let pos = this.node.position;
-            this.node.position = pos.add(cc.v2(0, -10));
-            this.frame.position = pos.add(cc.v2(0, -10));
+            this.node.position = pos.add(cc.v2(0, -1));
+            this.frame.position = pos.add(cc.v2(0, -1));
         });
-        
+        Global.eventListener.on("CONTROL_MODE_CLOSE", () => {
+            let len = this.bezierNodeList.length;
+            if (len > 0) {
+                let firstBezierNode = this.bezierNodeList[0];
+                let lastBezierNode = this.bezierNodeList[len -1];
+                let firstP0p = firstBezierNode.p0p;
+                let lastP = lastBezierNode.p3;
+                lastP.position = firstP0p;
+                lastBezierNode.p3p = firstP0p;
+            }
+        });
+
         Global.eventListener.on("DRAG_START", (name: string) => {
             cc.log("-----------DRAG_START-----------");
             // name: NodeXXX
@@ -92,6 +103,14 @@ export default class Test extends BaseDraw {
                 let len = this.bezierNodeList.length;
                 if (len == bezierIndex2) { // 最后的端点
                     cc.log(bezierIndex1);
+                    if (Global.controlMode == ControlMode.CLOSE) {
+                        let firstBezierNode = this.bezierNodeList[0];
+                        let lastBezierNode = this.bezierNodeList[len -1];
+                        let firstP = firstBezierNode.p0;
+                        let lastP3p = lastBezierNode.p3p;
+                        firstP.position = lastP3p;
+                        firstBezierNode.p0p = lastP3p;
+                    }
                 } else {
                     cc.log(bezierIndex1);
                     cc.log(bezierIndex2);

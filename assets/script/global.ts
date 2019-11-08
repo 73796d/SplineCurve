@@ -1,5 +1,12 @@
 import EventListener from "./eventlistener";
 
+export const enum ControlMode {
+    FREE,
+    ALIGNED,
+    MIRRORED,
+    CLOSE
+};
+
 export default class Global {
     private static instance_: Global = new Global();
     private static eventListenter_: EventListener = new EventListener();
@@ -17,4 +24,6 @@ export default class Global {
     public static get eventListener(): EventListener {
         return this.eventListenter_;
     }
+
+    public static controlMode = ControlMode.FREE;
 }

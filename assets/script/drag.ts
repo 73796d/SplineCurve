@@ -17,7 +17,12 @@ export default class Drag extends cc.Component {
         this.node.position = v2;
     }
 
-    onLoad() {
+    onLoad() {}
+    start() {}
+    update() {}
+    lateUpdate() {}
+    onDestroy() {}
+    onEnable() {
         this.node.on(cc.Node.EventType.TOUCH_START, (touchEvent: cc.Event.EventTouch) => {
             Global.eventListener.fire("DRAG_START", this.node.name);
         }, this);
@@ -36,6 +41,12 @@ export default class Drag extends cc.Component {
         this.node.on(cc.Node.EventType.TOUCH_CANCEL, (touchEvent: cc.Event.EventTouch) => {
 
         }, this);
+    }
+    onDisable() {
+        this.node.off(cc.Node.EventType.TOUCH_START);
+        this.node.off(cc.Node.EventType.TOUCH_MOVE);
+        this.node.off(cc.Node.EventType.TOUCH_END);
+        this.node.off(cc.Node.EventType.TOUCH_CANCEL);
     }
 
 }
