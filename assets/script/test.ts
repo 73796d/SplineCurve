@@ -17,8 +17,12 @@ export default class Test extends BaseDraw {
         super.onLoad();
         this.pointMgr = cc.find("Canvas/PointMgr").getComponent(PointMgr);
         Global.eventListener.on("ADD_SPLINE", () => {
-            this.addBezeerNode();
+            this.addBezierNode();
         });
+        Global.eventListener.on("DELETE_SPLINE", () => {
+            this.removeBezierNode();
+        });
+        
         Global.eventListener.on("EDITOR_SCALE_SMALL", () => {
             let scale = this.node.scale;
             this.node.scale = scale * 0.5;
@@ -58,15 +62,23 @@ export default class Test extends BaseDraw {
             this.node.position = pos.add(cc.v2(0, -1));
             this.frame.position = pos.add(cc.v2(0, -1));
         });
-        Global.eventListener.on("CONTROL_MODE_CLOSE", () => {
+        Global.eventListener.on("CONTROL_MODE_CHANGE", () => {
             let len = this.bezierNodeList.length;
             if (len > 0) {
                 let firstBezierNode = this.bezierNodeList[0];
-                let lastBezierNode = this.bezierNodeList[len -1];
-                let firstP0p = firstBezierNode.p0p;
-                let lastP = lastBezierNode.p3;
-                lastP.position = firstP0p;
-                lastBezierNode.p3p = firstP0p;
+                let lastBezierNode = this.bezierNodeList[len - 1];
+                if (Global.controlMode == ControlMode.CLOSE) {
+                    this.pointMgr.deletePoint(lastBezierNode.p3);
+                    lastBezierNode.p3 = firstBezierNode.p0;
+                } else {
+                    let p3 = this.pointMgr.createPoint();
+                    let index = len * 3;
+                    p3.name = "Node" + index;
+                    p3.position = firstBezierNode.p0.position;
+                    this.node.addChild(p3);
+                    lastBezierNode.p3 = p3;
+                }
+
             }
         });
 
@@ -142,52 +154,102 @@ export default class Test extends BaseDraw {
         });
     }
 
-    addBezeerNode() {
+    addBezierNode() {
         let len = this.bezierNodeList.length;
         if (len == 0) {
             let p0 = this.pointMgr.createPoint();
             let p1 = this.pointMgr.createPoint();
             let p2 = this.pointMgr.createPoint();
-            let p3 = this.pointMgr.createPoint();
+            let p3 = p0;
             p0.name = "Node0";
             p1.name = "Node1";
             p2.name = "Node2";
-            p3.name = "Node3";
             p0.position = cc.v2(-640, 0);
             p1.position = cc.v2(-500, 140);
             p2.position = cc.v2(-500, -140);
-            p3.position = cc.v2(-360, 0);
-            let bezierNode = new BezierNode(p0, p1, p2, p3);
-            bezierNode.index = 0;
-            this.bezierNodeList.push(bezierNode);
             
             this.node.addChild(p0);
             this.node.addChild(p1);
             this.node.addChild(p2);
-            this.node.addChild(p3);
+            
+            if (Global.controlMode != ControlMode.CLOSE) {
+                p3 = this.pointMgr.createPoint();
+                p3.name = "Node3";
+                p3.position = cc.v2(-360, 0);
+                this.node.addChild(p3);
+            }
+            let bezierNode = new BezierNode(p0, p1, p2, p3);
+            bezierNode.index = 0;
+            this.bezierNodeList.push(bezierNode);
+            
         } else {
             let lastBezierNode = this.bezierNodeList[len - 1];
-            let p0 = lastBezierNode.p3;
+            let lastP = lastBezierNode.p3;
+            let tempP = this.pointMgr.createPoint();
+
+            let p0 = lastP;
             let p1 = this.pointMgr.createPoint();
             let p2 = this.pointMgr.createPoint();
-            let p3 = this.pointMgr.createPoint();
+            let p3 = tempP;
+            
             let index = len * 3;
             p1.name = "Node" + (index + 1);
             p2.name = "Node" + (index + 2);
             p3.name = "Node" + (index + 3);
 
-            let p0x = p0.position.x;
-            let p0y = p0.position.y
+            let p0x = lastP.position.x;
+            let p0y = lastP.position.y
             p1.position = cc.v2(p0x + 140, p0y + 140);
             p2.position = cc.v2(p0x + 140, p0y - 140);
             p3.position = cc.v2(p0x + 280, p0y);
+            if (Global.controlMode == ControlMode.CLOSE) {
+                p0 = tempP
+                p3 = lastP;
+                p0.name = "Node" + index;
+                p3.name = lastP.name;
+                p0.position = lastP.position;
+                p3.position = lastP.position;
+                this.node.addChild(p0);
+                this.node.addChild(p1);
+                this.node.addChild(p2);
+                
+                lastBezierNode.p3 = p0;
+            } else {
+                this.node.addChild(p1);
+                this.node.addChild(p2);
+                this.node.addChild(p3);
+            }
+            
             let bezierNode = new BezierNode(p0, p1, p2, p3);
             bezierNode.index = len;
             this.bezierNodeList.push(bezierNode);
+        }
+    }
 
-            this.node.addChild(p1);
-            this.node.addChild(p2);
-            this.node.addChild(p3);
+
+    removeBezierNode() {
+        let len = this.bezierNodeList.length;
+        if (len > 1) {
+            let lastLastBezierNode = this.bezierNodeList[len - 2];
+            let lastBezierNode = this.bezierNodeList[len - 1];
+            this.pointMgr.deletePoint(lastBezierNode.p1);
+            this.pointMgr.deletePoint(lastBezierNode.p2);
+            if (Global.controlMode == ControlMode.CLOSE) {
+                this.pointMgr.deletePoint(lastLastBezierNode.p3);
+                lastLastBezierNode.p3 = lastBezierNode.p3;
+
+            } else {
+                this.pointMgr.deletePoint(lastBezierNode.p3);
+            }
+
+            this.bezierNodeList.pop();         
+        } else if (len == 1) {
+            let lastBezierNode = this.bezierNodeList[len - 1];
+            this.pointMgr.deletePoint(lastBezierNode.p0);
+            this.pointMgr.deletePoint(lastBezierNode.p1);
+            this.pointMgr.deletePoint(lastBezierNode.p2);
+            this.pointMgr.deletePoint(lastBezierNode.p3);
+            this.bezierNodeList.pop();
         }
     }
 

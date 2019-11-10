@@ -59,6 +59,10 @@ export default class UI extends cc.Component {
         Global.eventListener.fire("ADD_SPLINE");
     }
 
+    onClickDeleteSpline() {
+        Global.eventListener.fire("DELETE_SPLINE");
+    }
+
     onClickScaleSmall() {
         Global.eventListener.fire("EDITOR_SCALE_SMALL");
     }
@@ -120,8 +124,8 @@ export default class UI extends cc.Component {
             Global.controlMode = ControlMode.MIRRORED;
         } else if (name == "toggle4") {
             Global.controlMode = ControlMode.CLOSE;
-            Global.eventListener.fire("CONTROL_MODE_CLOSE");
         }      
         cc.log(Global.controlMode)  
+        Global.eventListener.fire("CONTROL_MODE_CHANGE");
     }
 }
