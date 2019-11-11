@@ -63,6 +63,10 @@ export default class UI extends cc.Component {
         Global.eventListener.fire("DELETE_SPLINE");
     }
 
+    onClickDeleteAllSpline() {
+        Global.eventListener.fire("DELETE_ALL_SPLINE");
+    }
+
     onClickScaleSmall() {
         Global.eventListener.fire("EDITOR_SCALE_SMALL");
     }
@@ -89,6 +93,14 @@ export default class UI extends cc.Component {
 
     onClickArrowD() {
         Global.eventListener.fire("ARROW_D");
+    }
+
+    onClickPlay() {
+        Global.eventListener.fire("PLAY");
+    }
+
+    onClickStop() {
+        Global.eventListener.fire("STOP");
     }
 
     onCheckEdit(toggle: cc.Toggle, customEventData) {

@@ -2,6 +2,7 @@ import BaseDraw from "./basedraw";
 import PointMgr from "./pointmgr";
 import BezierNode from "./beziernode";
 import Global, { ControlMode } from "./global";
+import CubicBezier from "./cubicbezier";
 
 const { ccclass, property } = cc._decorator;
 
@@ -12,15 +13,30 @@ export default class Test extends BaseDraw {
 
     pointMgr:PointMgr = null; // 点管理器
     bezierNodeList: Array<BezierNode> = new Array();
+    time: number = 0;
+    playTime: number = 20;
+    isPlay: boolean = false;
+
+    totalLength: number = 0;
+    lineLengthList: Array<number> = new Array();
 
     onLoad() {
         super.onLoad();
         this.pointMgr = cc.find("Canvas/PointMgr").getComponent(PointMgr);
         Global.eventListener.on("ADD_SPLINE", () => {
+            this.isPlay = false;
             this.addBezierNode();
         });
         Global.eventListener.on("DELETE_SPLINE", () => {
+            this.isPlay = false;
             this.removeBezierNode();
+        });
+
+        Global.eventListener.on("DELETE_ALL_SPLINE", () => {
+            this.isPlay = false;
+            while (this.bezierNodeList.length > 0) {
+                this.removeBezierNode();
+            }
         });
         
         Global.eventListener.on("EDITOR_SCALE_SMALL", () => {
@@ -62,7 +78,27 @@ export default class Test extends BaseDraw {
             this.node.position = pos.add(cc.v2(0, -1));
             this.frame.position = pos.add(cc.v2(0, -1));
         });
+
+        Global.eventListener.on("PLAY", () => {
+            if (this.bezierNodeList.length == 0) {return}
+            this.isPlay = true;
+            this.totalLength = 0;
+            this.lineLengthList.splice(0, this.lineLengthList.length) ;
+            for (let index = 0; index < this.bezierNodeList.length; index++) {
+                let bezierNode = this.bezierNodeList[index];
+                let len = bezierNode.getLength(1);
+                this.totalLength += len;
+                this.lineLengthList[index] = len;
+            }
+            this.time = 0;
+        });
+
+        Global.eventListener.on("STOP", () => {
+            this.isPlay = false;
+        });
+
         Global.eventListener.on("CONTROL_MODE_CHANGE", () => {
+            this.isPlay = false;
             let len = this.bezierNodeList.length;
             if (len > 0) {
                 let firstBezierNode = this.bezierNodeList[0];
@@ -71,14 +107,15 @@ export default class Test extends BaseDraw {
                     this.pointMgr.deletePoint(lastBezierNode.p3);
                     lastBezierNode.p3 = firstBezierNode.p0;
                 } else {
-                    let p3 = this.pointMgr.createPoint();
-                    let index = len * 3;
-                    p3.name = "Node" + index;
-                    p3.position = firstBezierNode.p0.position;
-                    this.node.addChild(p3);
-                    lastBezierNode.p3 = p3;
+                    if (lastBezierNode.p3.name == firstBezierNode.p0.name) {
+                        let p3 = this.pointMgr.createPoint();
+                        let index = len * 3;
+                        p3.name = "Node" + index;
+                        p3.position = firstBezierNode.p0.position;
+                        this.node.addChild(p3);
+                        lastBezierNode.p3 = p3;
+                    }
                 }
-
             }
         });
 
@@ -86,12 +123,12 @@ export default class Test extends BaseDraw {
             cc.log("-----------DRAG_START-----------");
             // name: NodeXXX
             let index = Number(name.substring(4));
+            let len = this.bezierNodeList.length;
             if (index == 0) { // 第一个端点
                 cc.log(0);
             } else if (index > 0 && index % 3 == 0) { // 端点
                 let bezierIndex1 = index / 3 - 1;
                 let bezierIndex2 = index / 3;
-                let len = this.bezierNodeList.length;
                 if (len == bezierIndex2) { // 最后的端点
                     cc.log(bezierIndex1);
                 } else {
@@ -105,42 +142,67 @@ export default class Test extends BaseDraw {
             
         });
         Global.eventListener.on("DRAG_MOVE", (name: string) => {
+            this.isPlay = false;
             // name: NodeXXX
             let index = Number(name.substring(4));
+            let len = this.bezierNodeList.length;
             if (index == 0) { // 第一个点
                 cc.log(0);
             } else if (index > 0 && index % 3 == 0) { // 端点
                 let bezierIndex1 = index / 3 - 1;
                 let bezierIndex2 = index / 3;
-                let len = this.bezierNodeList.length;
                 if (len == bezierIndex2) { // 最后的端点
                     cc.log(bezierIndex1);
-                    if (Global.controlMode == ControlMode.CLOSE) {
-                        let firstBezierNode = this.bezierNodeList[0];
-                        let lastBezierNode = this.bezierNodeList[len -1];
-                        let firstP = firstBezierNode.p0;
-                        let lastP3p = lastBezierNode.p3p;
-                        firstP.position = lastP3p;
-                        firstBezierNode.p0p = lastP3p;
-                    }
                 } else {
                     cc.log(bezierIndex1);
                     cc.log(bezierIndex2);
                 }
             } else if (index > 0 && index % 3 != 0) { // 控制点
                 let bezierIndex = Math.floor(index / 3);
+                let indexOfBezier = index % 3;
                 cc.log(bezierIndex);
+                if (len > 1) {
+                    if ( index > 1 && index < (len * 3 - 1)) {
+                        let currBezierNode = this.bezierNodeList[bezierIndex];
+                        let movePoint: cc.Node = null;
+                        let middlePoint: cc.Node = null;
+                        let currPoint: cc.Node = null;
+                        if (indexOfBezier == 1) {
+                            let lastBezierNode = this.bezierNodeList[bezierIndex - 1];
+                            movePoint = lastBezierNode.p2;
+                            middlePoint = currBezierNode.p0;
+                            currPoint = currBezierNode.p1;
+                        } else if (indexOfBezier == 2) {
+                            let nextBezierNode = this.bezierNodeList[bezierIndex + 1];
+                            movePoint = nextBezierNode.p1;
+                            middlePoint = currBezierNode.p3;
+                            currPoint = currBezierNode.p2;
+                        }
+                        if (movePoint && middlePoint) {
+                            let currVec: cc.Vec2 = currPoint.position.sub(middlePoint.position);
+                            if (Global.controlMode == ControlMode.ALIGNED) {
+                                let moveLen = movePoint.position.sub(middlePoint.position).mag();
+                                movePoint.position = middlePoint.position.add(currVec.neg().normalize().mul(moveLen));
+                            } else if (Global.controlMode == ControlMode.MIRRORED) {
+                                movePoint.position = middlePoint.position.add(currVec.neg());
+                            }
+                        }
+     
+                    }
+                    
+                }
+
             }
         });
         Global.eventListener.on("DRAG_END", (name: string) => {
             // name: NodeXXX
             let index = Number(name.substring(4));
+            let len = this.bezierNodeList.length;
             if (index == 0) { // 第一个点
                 cc.log(0);
             } else if (index > 0 && index % 3 == 0) { // 端点
                 let bezierIndex1 = index / 3 - 1;
                 let bezierIndex2 = index / 3;
-                let len = this.bezierNodeList.length;
                 if (len == bezierIndex2) { // 最后的端点
                     cc.log(bezierIndex1);
                 } else {
@@ -226,7 +288,6 @@ export default class Test extends BaseDraw {
         }
     }
 
-
     removeBezierNode() {
         let len = this.bezierNodeList.length;
         if (len > 1) {
@@ -237,7 +298,6 @@ export default class Test extends BaseDraw {
             if (Global.controlMode == ControlMode.CLOSE) {
                 this.pointMgr.deletePoint(lastLastBezierNode.p3);
                 lastLastBezierNode.p3 = lastBezierNode.p3;
-
             } else {
                 this.pointMgr.deletePoint(lastBezierNode.p3);
             }
@@ -248,7 +308,9 @@ export default class Test extends BaseDraw {
             this.pointMgr.deletePoint(lastBezierNode.p0);
             this.pointMgr.deletePoint(lastBezierNode.p1);
             this.pointMgr.deletePoint(lastBezierNode.p2);
-            this.pointMgr.deletePoint(lastBezierNode.p3);
+            if (Global.controlMode != ControlMode.CLOSE) {
+                this.pointMgr.deletePoint(lastBezierNode.p3);
+            }
             this.bezierNodeList.pop();
         }
     }
@@ -267,51 +329,54 @@ export default class Test extends BaseDraw {
                 this.drawLine(bezierNode.p2p, bezierNode.p3p, cc.Color.GREEN, 2);
             }
         }
-
+        if (this.isPlay == true) {
+            this.time += dt;
+            this.updatePoint();
+        }
     }
 
-    //drawBezierCurve(p0: cc.Vec2, p1: cc.Vec2, p2: cc.Vec2, p3: cc.Vec2) {
-        // let cubicbezier = new CubicBezier(p0, p1, p2, p3);
-        // this.bezierList.push(cubicbezier);
+    updatePoint() {
+        if (this.time < this.playTime) {
+            // let len = cubicbezier.length(1);
+            // let t1 = cubicbezier.t2rt(0.2);
+            // let t2 = cubicbezier.t2rt2(0.2);
+            // let fd = cubicbezier.getFirstDerivative(0.5);
+            // let d = cubicbezier.getVelocity(0.5);
+            // let v = cubicbezier.getDirection(0.5);
+            // for (let j = 0; j < 100; j += 1) {
+            //     let t = j / 100;
+            //     const l = t * len;
+            //     t = cubicbezier.invert(t, l);
 
-        // let len = cubicbezier.length(1);
+            //     let point = cubicbezier.getPoint(t);
+            //     let color = cc.color(Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
+            //     this.drawCirclePoint(point, color, 8, true);
+            // }
 
-        // let t1 = cubicbezier.t2rt(0.2);
-        // let t2 = cubicbezier.t2rt2(0.2);
+            let totalLength = this.totalLength;
+            let percent = this.time / this.playTime;
+            let perLen = totalLength * percent;
+            let bezierNodeListLen = this.bezierNodeList.length;
+            let currIndex = 0;
+            for (let index = 0; index < bezierNodeListLen; index++) {
+                perLen -= this.lineLengthList[index];
+                if (perLen < 0) {
+                    currIndex = index;
+                    break;
+                }
+            }
+            perLen += this.lineLengthList[currIndex];
+            let len = this.lineLengthList[currIndex];
+            percent = perLen / len;
+            let rt = this.bezierNodeList[currIndex].cubicBezier.invert(percent, perLen);
+            let point = this.bezierNodeList[currIndex].cubicBezier.getPoint(rt);
+            let color = cc.color(Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
+            // this.drawCirclePoint(point, color, 3, true);
+            this.drawCirclePoint(point, cc.Color.RED, 3, true);
+        } else {
+            this.time = 0;
+        }
+        
+    }
 
-        // this.graphics.moveTo(p0.x, p0.y);
-        // this.graphics.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-        // this.graphics.stroke();
-        // this.drawLine(p0, p1, cc.Color.GREEN, 2);
-        // this.drawLine(p2, p3, cc.Color.GREEN, 2);
-
-        // let point = cc.instantiate(this.point);
-        // point.position = p0;
-        // point.parent = this.node;
-        // point = cc.instantiate(this.point);
-        // point.position = p3;
-        // point.parent = this.node;
-        // point = cc.instantiate(this.point);
-        // point.position = p1;
-        // point.parent = this.node;
-        // point = cc.instantiate(this.point);
-        // point.setPosition(p2);
-        // point.parent = this.node;
-
-
-        // let fd = cubicbezier.getFirstDerivative(0.5);
-        // let d = cubicbezier.getVelocity(0.5);
-        // let v = cubicbezier.getDirection(0.5);
-
-        // len = Math.floor(cubicbezier.length(1));
-        // for (let j = 0; j < 100; j += 1) {
-        //     let t = j / 100;
-        //     const l = t * len;
-        //     t = cubicbezier.invert(t, l);
-
-        //     let point = cubicbezier.getPoint(t);
-        //     let color = cc.color(Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
-        //     this.drawCirclePoint(point, color, 8, true);
-        // }
-    // }
 }
