@@ -125,6 +125,10 @@ export default class UI extends cc.Component {
         }
     }
 
+    setChangePlayTime(target: cc.EditBox) {
+        Global.eventListener.fire("SET_CHANGE_PLAY_TIME", Number(target.string));
+    }
+
     onControlMode(toggle: cc.Toggle, customEventData) {
         let isChecked = toggle.isChecked;
         let name = toggle.name.substring(0, 7)

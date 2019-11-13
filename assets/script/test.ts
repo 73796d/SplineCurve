@@ -97,6 +97,10 @@ export default class Test extends BaseDraw {
             this.isPlay = false;
         });
 
+        Global.eventListener.on("SET_CHANGE_PLAY_TIME", (time: number) => {
+            this.playTime = time;
+        });
+
         Global.eventListener.on("CONTROL_MODE_CHANGE", () => {
             this.isPlay = false;
             let len = this.bezierNodeList.length;
