@@ -20,20 +20,29 @@ export default class Test extends BaseDraw {
     totalLength: number = 0;
     lineLengthList: Array<number> = new Array();
 
+    pointList: Array<cc.Vec2> = new Array();
+    isAddPoint: boolean = false;
+
     onLoad() {
         super.onLoad();
         this.pointMgr = cc.find("Canvas/PointMgr").getComponent(PointMgr);
         Global.eventListener.on("ADD_SPLINE", () => {
             this.isPlay = false;
+            this.isAddPoint = false;
+            this.pointList.length = 0;
             this.addBezierNode();
         });
         Global.eventListener.on("DELETE_SPLINE", () => {
             this.isPlay = false;
+            this.isAddPoint = false;
+            this.pointList.length = 0;
             this.removeBezierNode();
         });
 
         Global.eventListener.on("DELETE_ALL_SPLINE", () => {
             this.isPlay = false;
+            this.isAddPoint = false;
+            this.pointList.length = 0;
             while (this.bezierNodeList.length > 0) {
                 this.removeBezierNode();
             }
@@ -90,11 +99,30 @@ export default class Test extends BaseDraw {
                 this.totalLength += len;
                 this.lineLengthList[index] = len;
             }
+            this.isAddPoint = true;
             this.time = 0;
         });
 
         Global.eventListener.on("STOP", () => {
+            this.isAddPoint = false;
+            this.pointList.length = 0;
             this.isPlay = false;
+        });
+
+        Global.eventListener.on("CLICK_SAVE", () => {
+
+            let ss: Array<number> = new Array();
+            for (let i = 0; i < this.pointList.length; i++) {
+                let nexti = i + 1;
+                if (nexti !== this.pointList.length) {
+                    let point1 = this.pointList[i];
+                    let point2 = this.pointList[nexti];
+
+                    ss.push(point1.sub(point2).mag());
+                }
+            }
+
+            Global.eventListener.fire("SAVE", JSON.stringify(ss));
         });
 
         Global.eventListener.on("SET_CHANGE_PLAY_TIME", (time: number) => {
@@ -102,7 +130,9 @@ export default class Test extends BaseDraw {
         });
 
         Global.eventListener.on("CONTROL_MODE_CHANGE", () => {
+            this.isAddPoint = false;
             this.isPlay = false;
+            this.pointList.length = 0;
             let len = this.bezierNodeList.length;
             if (len > 0) {
                 let firstBezierNode = this.bezierNodeList[0];
@@ -146,7 +176,9 @@ export default class Test extends BaseDraw {
             
         });
         Global.eventListener.on("DRAG_MOVE", (name: string) => {
+            this.isAddPoint = false;
             this.isPlay = false;
+            this.pointList.length = 0;
             // name: NodeXXX
             let index = Number(name.substring(4));
             let len = this.bezierNodeList.length;
@@ -329,8 +361,8 @@ export default class Test extends BaseDraw {
                 this.setStrokeColor(cc.Color.BLUE);
                 this.setLineWidth(2);
                 this.drawBezierCurve(bezierNode.p0p, bezierNode.p1p, bezierNode.p2p, bezierNode.p3p);
-                this.drawLine(bezierNode.p0p, bezierNode.p1p, cc.Color.GREEN, 2);
-                this.drawLine(bezierNode.p2p, bezierNode.p3p, cc.Color.GREEN, 2);
+                this.drawLine(bezierNode.p0p, bezierNode.p1p, new cc.Color(0, 255, 0, 50), 2);
+                this.drawLine(bezierNode.p2p, bezierNode.p3p, new cc.Color(0, 255, 0, 50), 2);
             }
         }
         if (this.isPlay == true) {
@@ -340,6 +372,9 @@ export default class Test extends BaseDraw {
     }
 
     updatePoint() {
+        for (let i = 0; i < this.pointList.length; i++) {
+            this.drawCirclePoint(this.pointList[i], cc.Color.RED, 3, true);
+        }
         if (this.time < this.playTime) {
             // let len = cubicbezier.length(1);
             // let t1 = cubicbezier.t2rt(0.2);
@@ -376,11 +411,15 @@ export default class Test extends BaseDraw {
             let point = this.bezierNodeList[currIndex].cubicBezier.getPoint(rt);
             let color = cc.color(Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
             // this.drawCirclePoint(point, color, 3, true);
-            this.drawCirclePoint(point, cc.Color.RED, 3, true);
+            this.drawCirclePoint(point, cc.Color.GREEN, 3, true);
+
+            if (this.isAddPoint) {
+                this.pointList.push(point);
+            }
         } else {
             this.time = 0;
+            this.isAddPoint = false;
         }
-        
     }
 
 }

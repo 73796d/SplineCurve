@@ -12,6 +12,10 @@ export default class UI extends cc.Component {
     onLoad() {
         this.setReferenceDraggable(false);
         this.createFileLoader();
+
+        Global.eventListener.on("SAVE", (text: string) => {
+            this.saveToFile(text);
+        });
     }
 
     createFileLoader() {
@@ -44,6 +48,25 @@ export default class UI extends cc.Component {
             } else {
                 alert('不支持');
             }
+        }
+    }
+
+    saveToFile(text: string, fileName: string = "filename") {
+        if (cc.sys.isBrowser) {
+            let textFileAsBlob = new Blob([text], {type: "application/json"});
+            let fileNameToSaveAs = "filename.json";
+            let downloadLink = document.createElement("a");
+            downloadLink.download = fileNameToSaveAs;
+            downloadLink.innerHTML = "Download File";
+            if (window.URL != null) {
+                downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+            } else {
+                downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+                downloadLink.style.display = "none";
+                document.body.appendChild(downloadLink);
+            }
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
         }
     }
 
@@ -101,6 +124,10 @@ export default class UI extends cc.Component {
 
     onClickStop() {
         Global.eventListener.fire("STOP");
+    }
+
+    onClickSave() {
+        Global.eventListener.fire("CLICK_SAVE");
     }
 
     onCheckEdit(toggle: cc.Toggle, customEventData) {
