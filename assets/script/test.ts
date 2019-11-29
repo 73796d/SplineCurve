@@ -89,7 +89,7 @@ export default class Test extends BaseDraw {
         });
 
         Global.eventListener.on("PLAY", () => {
-            if (this.bezierNodeList.length == 0) {return}
+            if (this.bezierNodeList.length === 0) {return}
             this.isPlay = true;
             this.totalLength = 0;
             this.lineLengthList.splice(0, this.lineLengthList.length) ;
@@ -137,11 +137,11 @@ export default class Test extends BaseDraw {
             if (len > 0) {
                 let firstBezierNode = this.bezierNodeList[0];
                 let lastBezierNode = this.bezierNodeList[len - 1];
-                if (Global.controlMode == ControlMode.CLOSE) {
+                if (Global.controlMode === ControlMode.CLOSE) {
                     this.pointMgr.deletePoint(lastBezierNode.p3);
                     lastBezierNode.p3 = firstBezierNode.p0;
                 } else {
-                    if (lastBezierNode.p3.name == firstBezierNode.p0.name) {
+                    if (lastBezierNode.p3.name === firstBezierNode.p0.name) {
                         let p3 = this.pointMgr.createPoint();
                         let index = len * 3;
                         p3.name = "Node" + index;
@@ -158,12 +158,12 @@ export default class Test extends BaseDraw {
             // name: NodeXXX
             let index = Number(name.substring(4));
             let len = this.bezierNodeList.length;
-            if (index == 0) { // 第一个端点
+            if (index === 0) { // 第一个端点
                 cc.log(0);
-            } else if (index > 0 && index % 3 == 0) { // 端点
+            } else if (index > 0 && index % 3 === 0) { // 端点
                 let bezierIndex1 = index / 3 - 1;
                 let bezierIndex2 = index / 3;
-                if (len == bezierIndex2) { // 最后的端点
+                if (len === bezierIndex2) { // 最后的端点
                     cc.log(bezierIndex1);
                 } else {
                     cc.log(bezierIndex1);
@@ -182,12 +182,12 @@ export default class Test extends BaseDraw {
             // name: NodeXXX
             let index = Number(name.substring(4));
             let len = this.bezierNodeList.length;
-            if (index == 0) { // 第一个点
+            if (index === 0) { // 第一个点
                 cc.log(0);
-            } else if (index > 0 && index % 3 == 0) { // 端点
+            } else if (index > 0 && index % 3 === 0) { // 端点
                 let bezierIndex1 = index / 3 - 1;
                 let bezierIndex2 = index / 3;
-                if (len == bezierIndex2) { // 最后的端点
+                if (len === bezierIndex2) { // 最后的端点
                     cc.log(bezierIndex1);
                 } else {
                     cc.log(bezierIndex1);
@@ -203,12 +203,12 @@ export default class Test extends BaseDraw {
                         let movePoint: cc.Node = null;
                         let middlePoint: cc.Node = null;
                         let currPoint: cc.Node = null;
-                        if (indexOfBezier == 1) {
+                        if (indexOfBezier === 1) {
                             let lastBezierNode = this.bezierNodeList[bezierIndex - 1];
                             movePoint = lastBezierNode.p2;
                             middlePoint = currBezierNode.p0;
                             currPoint = currBezierNode.p1;
-                        } else if (indexOfBezier == 2) {
+                        } else if (indexOfBezier === 2) {
                             let nextBezierNode = this.bezierNodeList[bezierIndex + 1];
                             movePoint = nextBezierNode.p1;
                             middlePoint = currBezierNode.p3;
@@ -216,10 +216,10 @@ export default class Test extends BaseDraw {
                         }
                         if (movePoint && middlePoint) {
                             let currVec: cc.Vec2 = currPoint.position.sub(middlePoint.position);
-                            if (Global.controlMode == ControlMode.ALIGNED) {
+                            if (Global.controlMode === ControlMode.ALIGNED) {
                                 let moveLen = movePoint.position.sub(middlePoint.position).mag();
                                 movePoint.position = middlePoint.position.add(currVec.neg().normalize().mul(moveLen));
-                            } else if (Global.controlMode == ControlMode.MIRRORED) {
+                            } else if (Global.controlMode === ControlMode.MIRRORED) {
                                 movePoint.position = middlePoint.position.add(currVec.neg());
                             }
                         }
@@ -234,12 +234,12 @@ export default class Test extends BaseDraw {
             // name: NodeXXX
             let index = Number(name.substring(4));
             let len = this.bezierNodeList.length;
-            if (index == 0) { // 第一个点
+            if (index === 0) { // 第一个点
                 cc.log(0);
-            } else if (index > 0 && index % 3 == 0) { // 端点
+            } else if (index > 0 && index % 3 === 0) { // 端点
                 let bezierIndex1 = index / 3 - 1;
                 let bezierIndex2 = index / 3;
-                if (len == bezierIndex2) { // 最后的端点
+                if (len === bezierIndex2) { // 最后的端点
                     cc.log(bezierIndex1);
                 } else {
                     cc.log(bezierIndex1);
@@ -254,7 +254,7 @@ export default class Test extends BaseDraw {
 
     addBezierNode() {
         let len = this.bezierNodeList.length;
-        if (len == 0) {
+        if (len === 0) {
             let p0 = this.pointMgr.createPoint();
             let p1 = this.pointMgr.createPoint();
             let p2 = this.pointMgr.createPoint();
@@ -300,7 +300,7 @@ export default class Test extends BaseDraw {
             p1.position = cc.v2(p0x + 140, p0y + 140);
             p2.position = cc.v2(p0x + 140, p0y - 140);
             p3.position = cc.v2(p0x + 280, p0y);
-            if (Global.controlMode == ControlMode.CLOSE) {
+            if (Global.controlMode === ControlMode.CLOSE) {
                 p0 = tempP
                 p3 = lastP;
                 p0.name = "Node" + index;
@@ -339,7 +339,7 @@ export default class Test extends BaseDraw {
             }
 
             this.bezierNodeList.pop();         
-        } else if (len == 1) {
+        } else if (len === 1) {
             let lastBezierNode = this.bezierNodeList[len - 1];
             this.pointMgr.deletePoint(lastBezierNode.p0);
             this.pointMgr.deletePoint(lastBezierNode.p1);
@@ -365,7 +365,7 @@ export default class Test extends BaseDraw {
                 this.drawLine(bezierNode.p2p, bezierNode.p3p, new cc.Color(0, 255, 0, 50), 2);
             }
         }
-        if (this.isPlay == true) {
+        if (this.isPlay === true) {
             this.time += dt;
             this.updatePoint();
         }

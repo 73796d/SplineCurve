@@ -178,10 +178,10 @@ export default class CubicBezier {
         let i = 0;
         let sum1 = 0, sum2 = 0, dStep: number;
 
-        if (stepCounts == 0) {
+        if (stepCounts === 0) {
             return 0;
         }
-        if (stepCounts % 2 == 0) { // 偶数
+        if (stepCounts % 2 === 0) { // 偶数
             stepCounts++;
         }
 

@@ -159,13 +159,13 @@ export default class UI extends cc.Component {
     onControlMode(toggle: cc.Toggle, customEventData) {
         let isChecked = toggle.isChecked;
         let name = toggle.name.substring(0, 7)
-        if (name == "toggle1") {
+        if (name === "toggle1") {
             Global.controlMode = ControlMode.FREE;
-        } else if (name== "toggle2") {
+        } else if (name=== "toggle2") {
             Global.controlMode = ControlMode.ALIGNED;
-        } else if (name == "toggle3") {
+        } else if (name === "toggle3") {
             Global.controlMode = ControlMode.MIRRORED;
-        } else if (name == "toggle4") {
+        } else if (name === "toggle4") {
             Global.controlMode = ControlMode.CLOSE;
         }      
         cc.log(Global.controlMode)  

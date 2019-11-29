@@ -20,7 +20,7 @@ export default class PointMgr extends cc.Component {
         if (this.size < 1) {
             throw Error("size < 1");
         }
-        if (this.prefab == null) {
+        if (this.prefab === null) {
             throw Error("prefab null");
         }
 
