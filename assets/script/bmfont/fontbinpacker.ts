@@ -1,8 +1,8 @@
-const BestShortSideFit = 0;     // /< -BSSF: Positions the Rectangle against the short side of a free Rectangle into which it fits the best.
-const BestLongSideFit = 1;      // /< -BLSF: Positions the Rectangle against the long side of a free Rectangle into which it fits the best.
-const BestAreaFit = 2;          // /< -BAF: Positions the Rectangle into the smallest free Rectangle into which it fits.
-const BottomLeftRule = 3;       // /< -BL: Does the Tetris placement.
-const ContactPointRule = 4;     // /< -CP: Choosest the placement where the Rectangle touches other Rectangles as much as possible.
+const BestShortSideFit = 0;     // /< -BSSF: 放置在最合适的短边上
+const BestLongSideFit = 1;      // /< -BLSF: 放置在最合适的长边上
+const BestAreaFit = 2;          // /< -BAF: 放置合适的最小容器中
+const BottomLeftRule = 3;       // /< -BL: 俄罗斯方块放置
+const ContactPointRule = 4;     // /< -CP: 尽可能选择矩形接触其他矩形的位置。
 
 /**
  * FontBinPacker
@@ -16,9 +16,9 @@ class FontBinPacker {
 
     /**
      * @constructor
-     * @param {Number} width The container width
-     * @param {Number} height The container height
-     * @param {Boolean} [allowRotate=false] Whether to allow rotate the rects
+     * @param {Number} width 容器宽度
+     * @param {Number} height 容器高度
+     * @param {Boolean} [allowRotate=false] 是否允许旋转矩形
      */
     constructor(width: number, height: number, allowRotate: boolean = false) {
         this.init(width, height, allowRotate);
@@ -26,9 +26,9 @@ class FontBinPacker {
 
     /**
      * 初始化
-     * @param {Number} width The container width
-     * @param {Number} height The container height
-     * @param {Boolean} allowRotate Whether to allow rotate the rects
+     * @param {Number} width 容器宽度
+     * @param {Number} height 容器高度
+     * @param {Boolean} allowRotate 是否允许旋转矩形
      */
     init(width: number, height: number, allowRotate: boolean) {
         this.binWidth = width;
@@ -41,10 +41,10 @@ class FontBinPacker {
     }
 
     /**
-     * insert a new rect
-     * @param  {Number} width  The width of the rect
-     * @param  {Number} height The height of the rect
-     * @param  {Number} method The pack rule, allow value is BestShortSideFit, BestLongSideFit, BestAreaFit, BottomLeftRule, ContactPointRule
+     * 插入新矩形
+     * @param  {Number} width  矩形宽度
+     * @param  {Number} height 矩形高度
+     * @param  {Number} method pack规则
      * @return {Rect}
      */
     insert(width: number, height: number, method: number): cc.Rect {
@@ -86,7 +86,7 @@ class FontBinPacker {
     }
 
     /**
-     * Insert a set of rectangles
+     * 插入一组矩形
      * @param  {Rect[]} rectangles The set of rects, allow custum property.
      * @param  {Number} method The pack rule, allow value is BestShortSideFit, BestLongSideFit, BestAreaFit, BottomLeftRule, ContactPointRule
      * @return {Rect[]} The result of bin pack.
