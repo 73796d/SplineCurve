@@ -1,5 +1,8 @@
 import ItemMgr from "./itemmgr";
 import Item from "./item";
+import { FontUtil } from "./fontutil";
+import { Rect } from "./rect";
+import BaseDraw from "../basedraw";
 
 const { ccclass, property } = cc._decorator;
 const FILE_STYLE = `
@@ -35,6 +38,56 @@ export default class BMFontUI extends cc.Component {
         this.itemMgr = cc.find("Canvas/ItemMgr").getComponent(ItemMgr);
         this.createFileLoader(); // 创建文件选择器
         this.createDragZone(); // 创建拖拽区域
+
+        this.schedule(()=> {
+            this.fiveUpdate();
+        }, 15);
+
+        // let ss =  FontUtil.genInfo("baiseshuzi", "0", "0", "0", "ANSI", "0", "0", "1", "1", "0,0,0,0", "0,0");
+        // ss += FontUtil.genCommon("21", "0", "128", "64", "1", "2");
+        // ss += FontUtil.genPage("21", "baiseshuzi.png");
+        // ss += FontUtil.genChars("21");
+        // ss += FontUtil.genChar("21", "0", "21", "21", "21", "21", "21", "21", "21", "21");
+        // ss += FontUtil.genChar("21", "0", "21", "21", "21", "21", "21", "21", "21", "21");
+        // ss += FontUtil.genChar("21", "0", "21", "21", "21", "21", "21", "21", "21", "21");
+        // ss += FontUtil.genChar("21", "0", "21", "21", "21", "21", "21", "21", "21", "21");
+        // console.log(ss);
+
+        // // FontUtil.saveToFile(ss);
+
+        // FontUtil.run();
+    }
+    fiveUpdate() {
+        let rects: Array<cc.Rect> = new Array<cc.Rect>();
+        for (let i = 0; i < this.itemList.length; i++) {
+            let item = this.itemList[i];
+            rects.push(new Rect(item.id, 0, 0, item.imgSize.width, item.imgSize.height));
+        }
+        let packs = FontUtil.run(rects);
+        this.imageScrollView.content.removeAllChildren();
+
+        let sp = new cc.Node();
+        let spc = sp.addComponent(BaseDraw);
+        sp.parent = this.imageScrollView.content;
+        sp.anchorX = 0;
+        sp.anchorY = 1;
+        sp.position = cc.v2(0, 0);
+        spc.drawRectPoint(cc.v2(0, -64), cc.Color.RED, 64, 64, false);
+
+
+        for (let i = 0; i < packs.length; i++) {
+            let rect = packs[i];
+            let id = rect.id;
+            let itemData = this.getItemDataById(id);
+            let sp = new cc.Node();
+            let spc = sp.addComponent(cc.Sprite);
+            sp.parent = this.imageScrollView.content;
+            sp.anchorX = 0;
+            sp.anchorY = 1;
+            sp.position = cc.v2(rect.x, -rect.y);
+            spc.spriteFrame = new cc.SpriteFrame(itemData.img);
+
+        }
     }
 
     start() {
@@ -78,6 +131,7 @@ export default class BMFontUI extends cc.Component {
                 item.imgPath = file.name;
                 item.imgSize.width = texture.width;
                 item.imgSize.height = texture.height;
+                item.imgSize.id = id;
                 item.size = file.size;
                 this.itemList.push(item);
                 this.updateFontScrollView(texture);
@@ -138,6 +192,16 @@ export default class BMFontUI extends cc.Component {
         let contentSize = item.getChildByName("imgsize").getComponent(cc.Label);
         contentSize.string = "" + itemData.imgSize.width + "*" + itemData.imgSize.height;
     }
+
+    getItemDataById(id) {
+        for (let i = 0; i < this.itemList.length; i++) {
+            let item = this.itemList[i];
+            if (item.id === id) {
+                return item;
+            }
+        }   
+    }
+
 
     /**
      * 创建拖拽区域

@@ -6,7 +6,7 @@ const { ccclass, property } = cc._decorator;
 export default class NewClass extends BaseDraw {
     start() {
         this.clearDraw()
-        this.drawRectPoint(cc.Vec2.ZERO, cc.Color.GREEN, 10, true);
+        this.drawRectPoint(cc.Vec2.ZERO, cc.Color.GREEN, 10, 10, true);
         // this.drawRectPoint(this.node.position, cc.Color.GREEN, 10, false);
 
         this.node.width = 20;
@@ -15,7 +15,7 @@ export default class NewClass extends BaseDraw {
 
     update() {
         this.clearDraw()
-        this.drawRectPoint(cc.Vec2.ZERO, cc.Color.GREEN, 10, true);
+        this.drawRectPoint(cc.Vec2.ZERO, cc.Color.GREEN, 10, 10, true);
         // this.drawRectPoint(this.node.position, cc.Color.GREEN, 10, false);
     }
 

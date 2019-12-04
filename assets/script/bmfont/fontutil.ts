@@ -1,15 +1,76 @@
+import { FontBinPacker } from "./fontbinpacker";
+import { Rect } from "./rect";
+import BinPackBuilder from "./binpackbuilder";
+
 export class FontUtil {
 
-    public static genFontFnt(): boolean {
-        return true;
+    public static run(rects: Array<cc.Rect>) {
+        let packs = null;
+        let font = {
+            width: 0,
+            height: 0
+        };
+        this.getImageRects(rects, font);
+        let binBuilder = new BinPackBuilder();
+        binBuilder.init(font.width, font.height, rects)
+        if (binBuilder.build()) {
+            let width = binBuilder.atlasHeight;
+            let height = binBuilder.atlasWidth;
+            packs = binBuilder.packedRects;
+        }
+
+
+        // 将矩形打包
+        // 生成图片
+        // 生成描述文件
+        return packs;
     }
 
-    public static genFontImage() {
 
+    public static genFontFnt(fontName): boolean {
+		// 生成font描述信息
+        // 默认生成第一行空格，空格的宽度为 10
+		this.genChar(this.getCharId(" ").toString(), "0", "0", "0", "0", "0", "0", "" + 10, "0", "0");
+		return true;
     }
 
-    public static getImageRects() {
+    public static genFontImage(rects: Array<cc.Rect>) {
+    }
 
+    public static getImageRects(rects: Array<cc.Rect>, font) {
+        let sourceRects: Array<cc.Rect> = new Array<cc.Rect>();
+        let totalArea: number = 0;
+        for (let i = 0; i < rects.length; i++) {
+            let rect = rects[i];
+            sourceRects.push(rect);
+            totalArea += rect.width * rect.height;
+        }
+
+        let powerWidth = 1;
+        let powerHeight = 1;
+        while (true) {
+            let area = Math.pow(2, powerWidth) * Math.pow(2, powerHeight);
+            if (totalArea > area) {
+                if (powerWidth <= powerHeight) {
+					powerWidth++;
+				} else {
+					powerHeight++;
+				}
+            } else {
+                break;
+            }
+        }
+        let width = Math.pow(2, powerWidth);
+        let height = Math.pow(2, powerHeight);
+        font.width = width;
+        font.height = height;
+        return sourceRects;
+    }
+
+    public static getCharId(text: string) {
+        let char: string = text.charAt(0);
+        let id: number = char.charCodeAt(0);
+        return id;
     }
 
     /**
@@ -29,19 +90,8 @@ export class FontUtil {
     public static genInfo(face: string, size: string, bold: string,
         italic: string, charset: string, unicode: string, stretchH: string,
         smooth: string, aa: string, padding: string, spacing: string) {
-
-        let str: string = "info " +
-            "face=\"" + face + "\" " +
-            "size=" + size + " " +
-            "bold=" + bold + " " +
-            "italic=" + italic + " " +
-            "charset=\"" + charset + "\" " +
-            "unicode=" + unicode + " " +
-            "stretchH=" + stretchH + " " +
-            "smooth=" + smooth + " " +
-            "aa=" + aa + " " +
-            "padding=" + padding + " " +
-            "spacing=" + spacing + "\n";
+        let str: string = `info face="{0}" size={1} bold={2} italic={3} charset="{4}" unicode={5} stretchH={6} smooth={7} aa={8} padding={9} spacing={10}\n`
+        str = this.stringFormat(str, face, size, bold,italic, charset, unicode, stretchH, smooth, aa, padding, spacing);
         return str;
     }
 
@@ -55,14 +105,8 @@ export class FontUtil {
      * @param packed 图片不压缩
      */
     public static genCommon(lineHeight: string, base: string, scaleW: string, scaleH: string, pages: string, packed: string) {
-
-        let str: string = "common " +
-            "lineHeight=" + lineHeight + " " +
-            "base=" + base + " " +
-            "scaleW=" + scaleW + " " +
-            "scaleH=" + scaleH + " " +
-            "pages=" + pages + " " +
-            "packed=" + packed + "\n";
+        let str: string = `common lineHeight={0} base={1} scaleW={2} scaleH={3} pages={4} packed={5}\n`
+        str = this.stringFormat(str, lineHeight, base, scaleW, scaleW, pages, packed);
         return str;
     }
 
@@ -72,10 +116,8 @@ export class FontUtil {
      * @param file 贴图名称
      */
     public static genPage(id: string, file: string) {
-
-        let str = "page " +
-            "id=" + id + " " +
-            "file=\"" + file + "\"\n";
+        let str: string = `page id={0} file="{1}"\n`;
+        str = this.stringFormat(str, id, file);
         return str;
     }
     /**
@@ -83,9 +125,8 @@ export class FontUtil {
      * @param count 当前贴图中所容纳的字体数量
      */
     public static genChars(count: string) {
-
-        let str: string = "chars " +
-            "count=" + count + "\n";
+        let str: string  = `chars count={0}\n\n`;
+        str = this.stringFormat(str, count);
         return str;
     }
 
@@ -105,18 +146,39 @@ export class FontUtil {
     public static genChar(id: string, x: string, y: string, width: string, height: string,
         xoffset: string, yoffset: string, xadvance: string, page: string, chnl: string) {
 
-        let str = "char  " +
-            "id=" + id + "  " +
-            "x=" + x + "  " +
-            "y=" + y + "  " +
-            "width=" + width + "  " +
-            "height=" + height + "  " +
-            "xoffset=" + xoffset + "  " +
-            "yoffset=" + yoffset + "  " +
-            "xadvance=" + xadvance + "  " +
-            "page=" + page + "  " +
-            "chnl=" + chnl + "\n";
+        let str: string = `char  id={0}  x={1}  y={2}  width={3}  height={4}  xoffset={5}  yoffset={6}  xadvance={7}  page={8}  chnl={9}\n`;
+        str = this.stringFormat(str, id, x, y, width, height, xoffset, yoffset, xadvance, page, chnl);
         return str;
+    }
+
+    public static stringFormat(...args: string[]) {
+        let s = args[0];
+        for (let i = 0; i < args.length - 1; i++) {
+            if (args[i + 1] != undefined) {
+                var reg = new RegExp("\\{" + i + "\\}", "gm");
+                s = s.replace(reg, args[i + 1]);
+            }
+        }
+        return s;
+    }
+
+    public static saveToFile(text: string, fileName: string = "font.fnt") {
+        if (cc.sys.isBrowser) {
+            let textFileAsBlob = new Blob([text], {type: "text/plain"});
+            let fileNameToSaveAs = "filename.fnt";
+            let downloadLink = document.createElement("a");
+            downloadLink.download = fileNameToSaveAs;
+            downloadLink.innerHTML = "Download File";
+            if (window.URL != null) {
+                downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+            } else {
+                downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+                downloadLink.style.display = "none";
+                document.body.appendChild(downloadLink);
+            }
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
     }
 
 }

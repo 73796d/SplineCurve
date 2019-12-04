@@ -14,6 +14,10 @@ class FontBinPacker {
     usedRectangles: Array<cc.Rect> = new Array<cc.Rect>(); // 使用过的矩形
     freeRectangles: Array<cc.Rect> = new Array<cc.Rect>(); // 未使用的矩形
 
+    freeRectanglesLength: number = 0;
+
+    isSuccessBinPack: boolean = false;
+
     /**
      * @constructor
      * @param {Number} width 容器宽度
@@ -21,7 +25,7 @@ class FontBinPacker {
      * @param {Boolean} [allowRotate=false] 是否允许旋转矩形
      */
     constructor(width: number, height: number, allowRotate: boolean = false) {
-        this.init(width, height, allowRotate);
+        this._init(width, height, allowRotate);
     }
 
     /**
@@ -30,7 +34,7 @@ class FontBinPacker {
      * @param {Number} height 容器高度
      * @param {Boolean} allowRotate 是否允许旋转矩形
      */
-    init(width: number, height: number, allowRotate: boolean) {
+    private _init(width: number, height: number, allowRotate: boolean): void {
         this.binWidth = width;
         this.binHeight = height;
         this.allowRotate = allowRotate || false;
@@ -87,18 +91,20 @@ class FontBinPacker {
 
     /**
      * 插入一组矩形
-     * @param  {Rect[]} rectangles The set of rects, allow custum property.
-     * @param  {Number} method The pack rule, allow value is BestShortSideFit, BestLongSideFit, BestAreaFit, BottomLeftRule, ContactPointRule
-     * @return {Rect[]} The result of bin pack.
+     * @param  {Rect[]} rectangles 一组矩形, 可以自定义属性
+     * @param  {Number} method 打包规则
+     * @return {Rect[]} 打包结果
      */
     insert2(rectangles: cc.Rect[], method: number): cc.Rect[] {
+        this.freeRectanglesLength = rectangles.length;
         const res: Array<cc.Rect> = new Array<cc.Rect>();
         while (rectangles.length > 0) {
-            let bestScore1 = Infinity;
-            let bestScore2 = Infinity;
-            let bestRectangleIndex = -1;
+            let bestScore1: number = Infinity;
+            let bestScore2: number = Infinity;
+            let bestRectangleIndex: number = -1;
             let bestNode = new cc.Rect();
 
+            // 遍历寻找最佳的可放置矩形
             for (let i = 0; i < rectangles.length; i++) {
                 const score1 = {
                     value: 0
@@ -116,10 +122,12 @@ class FontBinPacker {
                 }
             }
 
+            // 没有找到最佳位置
             if (bestRectangleIndex === -1) {
                 return res;
             }
 
+            // 将剩余空间进行切割
             this._placeRectangle(bestNode);
             const rect = rectangles.splice(bestRectangleIndex, 1)[0];
             rect.x = bestNode.x;
@@ -127,9 +135,17 @@ class FontBinPacker {
 
             res.push(rect);
         }
+        if (res.length === this.freeRectanglesLength) {
+            this.isSuccessBinPack = true;
+        }
         return res;
     }
 
+    isBinPackSuccess() {
+        return this.isSuccessBinPack;
+    }
+
+    // 将空间分割
     _placeRectangle(node: cc.Rect) {
         let numRectanglesToProcess = this.freeRectangles.length;
         for (let i = 0; i < numRectanglesToProcess; i++) {
@@ -140,10 +156,13 @@ class FontBinPacker {
             }
         }
 
+        // 重新梳理
         this._pruneFreeList();
+        // 将已经装箱的矩形加入数组
         this.usedRectangles.push(node);
     }
 
+    // 寻找最佳矩形
     _scoreRectangle(width, height, method, score1, score2) {
         let newNode = new cc.Rect();
         score1.value = Infinity;
@@ -157,8 +176,7 @@ class FontBinPacker {
                 break;
             case ContactPointRule:
                 newNode = this._findPositionForNewNodeContactPoint(width, height, score1);
-                // todo: reverse
-                score1 = -score1; // Reverse since we are minimizing, but for contact point score bigger is better.
+                //score1 = -score1;
                 break;
             case BestLongSideFit:
                 newNode = this._findPositionForNewNodeBestLongSideFit(width, height, score2, score1);
@@ -170,7 +188,6 @@ class FontBinPacker {
                 break;
         }
 
-        // Cannot fit the current Rectangle.
         if (newNode.height === 0) {
             score1.value = Infinity;
             score2.value = Infinity;
@@ -179,6 +196,7 @@ class FontBinPacker {
         return newNode;
     }
 
+    // 空间利用率
     _occupancy() {
         const usedRectangles = this.usedRectangles;
         let usedSurfaceArea = 0;
@@ -189,17 +207,26 @@ class FontBinPacker {
         return usedSurfaceArea / (this.binWidth * this.binHeight);
     }
 
+    public wastedBinArea() {
+        const usedRectangles = this.usedRectangles;
+        let usedSurfaceArea = 0;
+        for (let i = 0; i < usedRectangles.length; i++) {
+            usedSurfaceArea += usedRectangles[i].width * usedRectangles[i].height;
+        }
+
+        return  (this.binWidth * this.binHeight) - usedSurfaceArea;
+    }
+
+
     _findPositionForNewNodeBottomLeft(width, height, bestY, bestX) {
         const freeRectangles = this.freeRectangles;
         const bestNode = new cc.Rect();
-        // memset(bestNode, 0, sizeof(Rectangle));
 
         bestY.value = Infinity;
         let rect: cc.Rect;
         let topSideY: number;
         for (let i = 0; i < freeRectangles.length; i++) {
             rect = freeRectangles[i];
-            // Try to place the Rectangle in upright (non-flipped) orientation.
             if (rect.width >= width && rect.height >= height) {
                 topSideY = rect.y + height;
                 if (topSideY < bestY.value || (topSideY === bestY.value && rect.x < bestX.value)) {
@@ -240,7 +267,6 @@ class FontBinPacker {
 
         for (let i = 0; i < freeRectangles.length; i++) {
             rect = freeRectangles[i];
-            // Try to place the Rectangle in upright (non-flipped) orientation.
             if (rect.width >= width && rect.height >= height) {
                 leftoverHoriz = Math.abs(rect.width - width);
                 leftoverVert = Math.abs(rect.height - height);
@@ -292,7 +318,6 @@ class FontBinPacker {
         let longSideFit;
         for (let i = 0; i < freeRectangles.length; i++) {
             rect = freeRectangles[i];
-            // Try to place the Rectangle in upright (non-flipped) orientation.
             if (rect.width >= width && rect.height >= height) {
                 leftoverHoriz = Math.abs(rect.width - width);
                 leftoverVert = Math.abs(rect.height - height);
@@ -345,7 +370,6 @@ class FontBinPacker {
             rect = freeRectangles[i];
             areaFit = rect.width * rect.height - width * height;
 
-            // Try to place the Rectangle in upright (non-flipped) orientation.
             if (rect.width >= width && rect.height >= height) {
                 leftoverHoriz = Math.abs(rect.width - width);
                 leftoverVert = Math.abs(rect.height - height);
@@ -379,7 +403,6 @@ class FontBinPacker {
         return bestNode;
     }
 
-    // / Returns 0 if the two intervals i1 and i2 are disjoint, or the length of their overlap otherwise.
     _commonIntervalLength(i1start, i1end, i2start, i2end) {
         if (i1end < i2start || i2end < i1start) {
             return 0;
@@ -412,7 +435,6 @@ class FontBinPacker {
         let score;
         for (let i = 0; i < freeRectangles.length; i++) {
             rect = freeRectangles[i];
-            // Try to place the Rectangle in upright (non-flipped) orientation.
             if (rect.width >= width && rect.height >= height) {
                 score = this._contactPointScoreNode(rect.x, rect.y, width, height);
                 if (score > bestContactScore.value) {
@@ -439,19 +461,19 @@ class FontBinPacker {
 
     _splitFreeNode(freeNode, usedNode) {
         const freeRectangles = this.freeRectangles;
-        // Test with SAT if the Rectangles even intersect.
+        // 用SAT测试矩形是否相交
         if (usedNode.x >= freeNode.x + freeNode.width || usedNode.x + usedNode.width <= freeNode.x
             || usedNode.y >= freeNode.y + freeNode.height || usedNode.y + usedNode.height <= freeNode.y) return false;
         let newNode;
         if (usedNode.x < freeNode.x + freeNode.width && usedNode.x + usedNode.width > freeNode.x) {
-            // New node at the top side of the used node.
+            // 在使用的节点顶部添加新节点
             if (usedNode.y > freeNode.y && usedNode.y < freeNode.y + freeNode.height) {
                 newNode = freeNode.clone();
                 newNode.height = usedNode.y - newNode.y;
                 freeRectangles.push(newNode);
             }
 
-            // New node at the bottom side of the used node.
+            // 在使用的节点底部添加新节点
             if (usedNode.y + usedNode.height < freeNode.y + freeNode.height) {
                 newNode = freeNode.clone();
                 newNode.y = usedNode.y + usedNode.height;
@@ -461,14 +483,14 @@ class FontBinPacker {
         }
 
         if (usedNode.y < freeNode.y + freeNode.height && usedNode.y + usedNode.height > freeNode.y) {
-            // New node at the left side of the used node.
+            // 在使用的节点左侧添加新节点
             if (usedNode.x > freeNode.x && usedNode.x < freeNode.x + freeNode.width) {
                 newNode = freeNode.clone();
                 newNode.width = usedNode.x - newNode.x;
                 freeRectangles.push(newNode);
             }
 
-            // New node at the right side of the used node.
+            // 在使用的节点右侧添加新节点
             if (usedNode.x + usedNode.width < freeNode.x + freeNode.width) {
                 newNode = freeNode.clone();
                 newNode.x = usedNode.x + usedNode.width;
@@ -480,15 +502,18 @@ class FontBinPacker {
         return true;
     }
 
+    // 梳理未使用的数组, 过滤有重叠的数据
     _pruneFreeList() {
         const freeRectangles = this.freeRectangles;
         for (let i = 0; i < freeRectangles.length; i++) {
             for (let j = i + 1; j < freeRectangles.length; j++) {
                 if (freeRectangles[i].containsRect(freeRectangles[j])) {
                     freeRectangles.splice(j, 1);
+                    j--;
                 }
                 if (freeRectangles[j].containsRect(freeRectangles[i])) {
                     freeRectangles.splice(i, 1);
+                    i--;
                     break;
                 }
             }

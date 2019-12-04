@@ -68,9 +68,9 @@ export default class BaseDraw extends cc.Component {
     /**
      * 画矩形点
      */
-    drawRectPoint(p0: cc.Vec2, color: cc.Color, size: number, isFill: boolean) {
+    drawRectPoint(p0: cc.Vec2, color: cc.Color, width: number, height: number, isFill: boolean) {
         this.setStrokeColor(color);
-        this.graphics.rect(p0.x, p0.y, size, size);
+        this.graphics.rect(p0.x, p0.y, width, height);
         this.graphics.stroke();
         if (isFill) {
             this.setFillColor(color);
