@@ -1,3 +1,6 @@
+/**
+ * Item 信息
+ */
 import { Rect } from "./rect";
 
 export default class Item {
@@ -7,4 +10,6 @@ export default class Item {
     public imgSize: Rect = new Rect(0, 0, 0, 0);
     public char: string = "";
     public size: number = 0;
+
+    public node: cc.Node = null;
 }

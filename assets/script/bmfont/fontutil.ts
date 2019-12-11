@@ -5,7 +5,6 @@ import BinPackBuilder from "./binpackbuilder";
 export class FontUtil {
 
     public static run(rects: Array<cc.Rect>) {
-        let packs = null;
         let font = {
             width: 0,
             height: 0
@@ -13,28 +12,25 @@ export class FontUtil {
         this.getImageRects(rects, font);
         let binBuilder = new BinPackBuilder();
         binBuilder.init(font.width, font.height, rects)
-        if (binBuilder.build()) {
-            let width = binBuilder.atlasHeight;
-            let height = binBuilder.atlasWidth;
-            packs = binBuilder.packedRects;
+        if (!binBuilder.build()) {
+            binBuilder = null;
         }
-
-
-        // 将矩形打包
-        // 生成图片
-        // 生成描述文件
-        return packs;
+        return binBuilder;
     }
 
 
-    public static genFontFnt(fontName): boolean {
-		// 生成font描述信息
-        // 默认生成第一行空格，空格的宽度为 10
-		this.genChar(this.getCharId(" ").toString(), "0", "0", "0", "0", "0", "0", "" + 10, "0", "0");
+    public static genFontFnt(fontName, items, dH, w, h, count, sW): boolean {
+        let info =  FontUtil.genInfo(fontName, "0", "0", "0", "ANSI", "0", "0", "1", "1", "0,0,0,0", "0,0");
+        info += FontUtil.genCommon(dH.toString(), "0", w.toString(), h.toString(), "1", "0");
+        info += FontUtil.genPage("0", fontName + ".png");
+        info += FontUtil.genChars(count + 1);
+        info += FontUtil.genChar(this.getCharId(" ").toString(), "0", "0", "0", "0", "0", "0", sW.toString(), "0", "0");
+        for (let i = 0; i < items.length; i++) {
+            let item = items[i];
+            info += FontUtil.genChar(this.getCharId(item.char).toString(), "0", "21", "21", "21", "21", "21", "21", "21", "21");
+        }
+        FontUtil.saveToFile(info);
 		return true;
-    }
-
-    public static genFontImage(rects: Array<cc.Rect>) {
     }
 
     public static getImageRects(rects: Array<cc.Rect>, font) {
@@ -151,6 +147,10 @@ export class FontUtil {
         return str;
     }
 
+    /**
+     * 字符串格式化
+     * @param args 
+     */
     public static stringFormat(...args: string[]) {
         let s = args[0];
         for (let i = 0; i < args.length - 1; i++) {
@@ -162,6 +162,11 @@ export class FontUtil {
         return s;
     }
 
+    /**
+     * 保存文件
+     * @param text 
+     * @param fileName 
+     */
     public static saveToFile(text: string, fileName: string = "font.fnt") {
         if (cc.sys.isBrowser) {
             let textFileAsBlob = new Blob([text], {type: "text/plain"});

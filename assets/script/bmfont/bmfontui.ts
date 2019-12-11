@@ -3,6 +3,7 @@ import Item from "./item";
 import { FontUtil } from "./fontutil";
 import { Rect } from "./rect";
 import BaseDraw from "../basedraw";
+import Global from "../global";
 
 const { ccclass, property } = cc._decorator;
 const FILE_STYLE = `
@@ -25,6 +26,7 @@ const DRAG_STYLE = `
 export default class BMFontUI extends cc.Component {
 
     input: HTMLInputElement = null; // 文件选择
+    zone: any  = null;
 
     @property(cc.ScrollView)
     fontScrollView: cc.ScrollView = null; // 字体滚动
@@ -36,66 +38,24 @@ export default class BMFontUI extends cc.Component {
 
     onLoad() {
         this.itemMgr = cc.find("Canvas/ItemMgr").getComponent(ItemMgr);
-        this.createFileLoader(); // 创建文件选择器
         this.createDragZone(); // 创建拖拽区域
-
-        this.schedule(()=> {
-            this.fiveUpdate();
-        }, 15);
-
-        // let ss =  FontUtil.genInfo("baiseshuzi", "0", "0", "0", "ANSI", "0", "0", "1", "1", "0,0,0,0", "0,0");
-        // ss += FontUtil.genCommon("21", "0", "128", "64", "1", "2");
-        // ss += FontUtil.genPage("21", "baiseshuzi.png");
-        // ss += FontUtil.genChars("21");
-        // ss += FontUtil.genChar("21", "0", "21", "21", "21", "21", "21", "21", "21", "21");
-        // ss += FontUtil.genChar("21", "0", "21", "21", "21", "21", "21", "21", "21", "21");
-        // ss += FontUtil.genChar("21", "0", "21", "21", "21", "21", "21", "21", "21", "21");
-        // ss += FontUtil.genChar("21", "0", "21", "21", "21", "21", "21", "21", "21", "21");
-        // console.log(ss);
-
-        // // FontUtil.saveToFile(ss);
-
-        // FontUtil.run();
-    }
-    fiveUpdate() {
-        let rects: Array<cc.Rect> = new Array<cc.Rect>();
-        for (let i = 0; i < this.itemList.length; i++) {
-            let item = this.itemList[i];
-            rects.push(new Rect(item.id, 0, 0, item.imgSize.width, item.imgSize.height));
-        }
-        let packs = FontUtil.run(rects);
-        this.imageScrollView.content.removeAllChildren();
-
-        let sp = new cc.Node();
-        let spc = sp.addComponent(BaseDraw);
-        sp.parent = this.imageScrollView.content;
-        sp.anchorX = 0;
-        sp.anchorY = 1;
-        sp.position = cc.v2(0, 0);
-        spc.drawRectPoint(cc.v2(0, -64), cc.Color.RED, 64, 64, false);
-
-
-        for (let i = 0; i < packs.length; i++) {
-            let rect = packs[i];
-            let id = rect.id;
-            let itemData = this.getItemDataById(id);
-            let sp = new cc.Node();
-            let spc = sp.addComponent(cc.Sprite);
-            sp.parent = this.imageScrollView.content;
-            sp.anchorX = 0;
-            sp.anchorY = 1;
-            sp.position = cc.v2(rect.x, -rect.y);
-            spc.spriteFrame = new cc.SpriteFrame(itemData.img);
-
-        }
-    }
-
-    start() {
-
-    }
-
-    update() {
-
+        Global.eventListener.on("REMOVE_ITEM", (id) => {
+            let item = this.deleteItem(id);
+            this.itemMgr.deleteItem(item.node);
+            for (let i = 0; i < this.itemList.length; i++) {
+                let tempItem = this.itemList[i];
+                let tempId = tempItem.id;
+                let tempNode = tempItem.node;
+                let idNode = tempNode.getChildByName("id");
+                let label = idNode.getComponent(cc.Label);
+                label.string = tempId.toString();
+            }
+        });
+        
+        Global.eventListener.on("CHANGE_CHAR", (id, char) => {
+            let item = this.getItemDataById(id);
+            item.char = char;
+        });
     }
 
     /**
@@ -110,35 +70,6 @@ export default class BMFontUI extends cc.Component {
         }
         return isCanUse;
     }
-
-    /**
-     * 读取文件
-     * @param file 文件
-     */
-    readFile(file) {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (e) => {
-            let img = document.createElement("img");
-            img.src = e.target.result;
-            let texture = new cc.Texture2D();
-            texture._nativeAsset = img;
-            texture.on("load", () => {
-                let id = this.itemList.length + 1;
-                let item = new Item();
-                item.id = id;
-                item.img = texture;
-                item.imgPath = file.name;
-                item.imgSize.width = texture.width;
-                item.imgSize.height = texture.height;
-                item.imgSize.id = id;
-                item.size = file.size;
-                this.itemList.push(item);
-                this.updateFontScrollView(texture);
-            });
-        };
-    }
-
     /**
      * 创建文件选择器
      */
@@ -162,47 +93,6 @@ export default class BMFontUI extends cc.Component {
             alert('不支持');
         }
     }
-
-    /**
-     * 文件选择器回调
-     */
-    onFileLoader() {
-        if (this.input) {
-            this.input.click();
-        }
-    }
-
-    /**
-     * 更新字体显示
-     * @param texture 纹理
-     */
-    updateFontScrollView(texture: cc.Texture2D) {
-        let itemData = this.itemList[this.itemList.length - 1];
-        let item = this.itemMgr.createItem();
-        let scrollView = this.fontScrollView;
-        scrollView.content.addChild(item);
-        let id = item.getChildByName("id").getComponent(cc.Label);
-        id.string = itemData.id.toString();
-        let img = item.getChildByName("img").getComponent(cc.Sprite);
-        img.spriteFrame = new cc.SpriteFrame(itemData.img);
-        let name = item.getChildByName("imgpath").getComponent(cc.Label);
-        name.string = itemData.imgPath.toString();
-        let size = item.getChildByName("size").getComponent(cc.Label);
-        size.string = Math.floor(itemData.size / 1024).toString();
-        let contentSize = item.getChildByName("imgsize").getComponent(cc.Label);
-        contentSize.string = "" + itemData.imgSize.width + "*" + itemData.imgSize.height;
-    }
-
-    getItemDataById(id) {
-        for (let i = 0; i < this.itemList.length; i++) {
-            let item = this.itemList[i];
-            if (item.id === id) {
-                return item;
-            }
-        }   
-    }
-
-
     /**
      * 创建拖拽区域
      */
@@ -232,15 +122,191 @@ export default class BMFontUI extends cc.Component {
                 e.dataTransfer.dropEffect = 'copy';
             };
 
-            let input = document.createElement("div");
-            input.setAttribute("type", "file");
-            input.setAttribute("accept", "image/*");
-            input.setAttribute("style", DRAG_STYLE);
-            input.addEventListener('dragover', dragOver, false);
-            input.addEventListener('drop', fileSelect, false);
-            document.getElementsByTagName("body")[0].appendChild(input);
+            let zone = document.createElement("div");
+            zone.setAttribute("type", "file");
+            zone.setAttribute("accept", "image/*");
+            zone.setAttribute("style", DRAG_STYLE);
+            zone.addEventListener('dragover', dragOver, false);
+            zone.addEventListener('drop', fileSelect, false);
+            document.getElementsByTagName("body")[0].appendChild(zone);
+            this.zone = zone;
         } else {
             alert('不支持');
         }
     }
+    /**
+     * 读取文件
+     * @param file 文件
+     */
+    readFile(file) {
+        // 通过文件名查询是否存在item
+        if (!this.hasItemByName(file.name)) {
+            let reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                let img = document.createElement("img");
+                img.src = e.target.result;
+                let texture = new cc.Texture2D();
+                texture._nativeAsset = img;
+                if (texture.loaded) { // 纹理已经加载
+                    this.createItem(texture, file.name, file.size);
+                    this.addFontScrollItem(texture);
+                } else { // 纹理未加载
+                    texture.on("load", () => {
+                        this.createItem(texture, file.name, file.size);
+                        this.addFontScrollItem(texture);
+                    });
+                }
+            };
+        }
+    }
+    /**
+     * 文件选择器回调
+     */
+    onFileLoader() {
+        if (this.input) {
+            document.getElementsByTagName("body")[0].removeChild(this.input);
+        }
+        this.createFileLoader();
+        if (this.input) {
+            this.input.click();
+        }
+    }
+
+    // 增
+    createItem(texture, imgPath, size) {
+        // id 从1开始
+        let id = this.itemList.length + 1;
+        let item = new Item();
+        item.id = id;
+        item.img = texture;
+        item.imgPath = imgPath;
+        item.char = item.imgPath.charAt(0);
+        item.imgSize.width = texture.width;
+        item.imgSize.height = texture.height;
+        item.imgSize.id = id;
+        item.size = size;
+        this.itemList.push(item);
+    }
+    // 删
+    deleteItem(id) {
+        let item = this.getItemDataById(id);
+        let index = this.itemList.indexOf(item)
+        this.itemList.splice(index, 1);
+        for (let i = 0; i < this.itemList.length; i++) {
+            let tempItem = this.itemList[i];
+            tempItem.id = i + 1;
+        }
+        return item;
+    }
+    // 改
+    modifyItem() {
+
+    }
+    // 查
+    searchItem() {
+
+    }
+
+    /**
+     * 点击生成图片回调
+     * 根据打包好的位置信息, 创建图片
+     */
+    onGenerateImage() {
+        let rects: Array<cc.Rect> = new Array<cc.Rect>();
+        for (let i = 0; i < this.itemList.length; i++) {
+            let item = this.itemList[i];
+            rects.push(new Rect(item.id, 0, 0, item.imgSize.width, item.imgSize.height));
+        }
+        let binBuilder = FontUtil.run(rects);
+        this.imageScrollView.content.removeAllChildren();
+        let width = binBuilder.atlasWidth; // 打包后宽度
+        let height = binBuilder.atlasHeight; // 打包后高度
+        let packs = binBuilder.packedRects;
+
+        this.imageScrollView.content.width = width;
+        this.imageScrollView.content.height = height;
+        // let sp = new cc.Node();
+        // let spc = sp.addComponent(BaseDraw);
+        // sp.parent = this.imageScrollView.content;
+        // sp.anchorX = 0;
+        // sp.anchorY = 1;
+        // sp.position = cc.v2(0, 0);
+        // spc.drawRectPoint(cc.v2(0, -height), cc.Color.RED, width, height, false);
+        for (let i = 0; i < packs.length; i++) {
+            let rect = packs[i] as Rect;
+            let id = rect.id;
+            let itemData = this.getItemDataById(id);
+            let sp = new cc.Node();
+            let spc = sp.addComponent(cc.Sprite);
+            sp.parent = this.imageScrollView.content;
+            sp.anchorX = 0;
+            sp.anchorY = 1;
+            sp.position = cc.v2(rect.x, -rect.y);
+            spc.spriteFrame = new cc.SpriteFrame(itemData.img);
+        }
+
+        FontUtil.genFontFnt("12212", packs, 12, 12, 12, packs.length, 12);
+    }
+
+    /**
+     * 生成bmf回调, 通过Camera制作
+     */
+    onGenerateBMF() {
+        Global.eventListener.fire("GENERATE_IMAGE");
+    }
+
+    onBackMain() {
+        Global.eventListener.off("REMOVE_ITEM");
+        Global.eventListener.off("CHANGE_CHAR");
+        document.getElementsByTagName("body")[0].removeChild(this.input);
+        document.getElementsByTagName("body")[0].removeChild(this.zone);
+        cc.director.loadScene("Menu");
+    }
+
+    /**
+     * 添加一个显示的字体
+     * @param texture 纹理
+     */
+    addFontScrollItem(texture: cc.Texture2D) {
+        let itemData = this.itemList[this.itemList.length - 1];
+        let item = this.itemMgr.createItem();
+        itemData.node = item;
+        let scrollView = this.fontScrollView;
+        scrollView.content.addChild(item);
+        let id = item.getChildByName("id").getComponent(cc.Label);
+        id.string = itemData.id.toString();
+        let img = item.getChildByName("img").getComponent(cc.Sprite);
+        img.spriteFrame = new cc.SpriteFrame(itemData.img);
+        let name = item.getChildByName("imgpath").getComponent(cc.Label);
+        name.string = itemData.imgPath.toString();
+        let size = item.getChildByName("size").getComponent(cc.Label);
+        size.string = Math.floor(itemData.size / 1024).toString();
+        let contentSize = item.getChildByName("imgsize").getComponent(cc.Label);
+        contentSize.string = "" + itemData.imgSize.width + "*" + itemData.imgSize.height;
+        let charText = item.getChildByName("char").getComponent(cc.EditBox);
+        charText.string = "" + itemData.char;
+    }
+
+
+    getItemDataById(id: number) {
+        for (let i = 0; i < this.itemList.length; i++) {
+            let item = this.itemList[i];
+            if (item.id === id) {
+                return item;
+            }
+        }
+    }
+
+    hasItemByName(name: string) {
+        let flag: boolean = false;
+        for (let i = 0; i < this.itemList.length; i++) {
+            let item = this.itemList[i];
+            if (item.imgPath === name) {
+                flag = true;
+            }
+        }
+        return flag;
+    }
+
 }

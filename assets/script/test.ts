@@ -38,7 +38,6 @@ export default class Test extends BaseDraw {
             this.pointList.length = 0;
             this.removeBezierNode();
         });
-
         Global.eventListener.on("DELETE_ALL_SPLINE", () => {
             this.isPlay = false;
             this.isAddPoint = false;
@@ -47,26 +46,22 @@ export default class Test extends BaseDraw {
                 this.removeBezierNode();
             }
         });
-        
         Global.eventListener.on("EDITOR_SCALE_SMALL", () => {
             let scale = this.node.scale;
             this.node.scale = scale * 0.5;
             this.frame.scale = scale * 0.5;
         });
-
         Global.eventListener.on("EDITOR_SCALE_BIG", () => {
             let scale = this.node.scale;
             this.node.scale = scale * 2;
             this.frame.scale = scale * 2;
         });
-        
         Global.eventListener.on("EDITOR_SCALE_RESTORE", () => {
             this.node.scale = 1;
             this.frame.scale = 1;
             this.node.position = cc.v2(0, 0);
             this.frame.position = cc.v2(0, 0);
         });
-
         Global.eventListener.on("ARROW_L", () => {
             let pos = this.node.position;
             this.node.position = pos.add(cc.v2(-1, 0));
@@ -87,7 +82,6 @@ export default class Test extends BaseDraw {
             this.node.position = pos.add(cc.v2(0, -1));
             this.frame.position = pos.add(cc.v2(0, -1));
         });
-
         Global.eventListener.on("PLAY", () => {
             if (this.bezierNodeList.length === 0) {return}
             this.isPlay = true;
@@ -102,13 +96,11 @@ export default class Test extends BaseDraw {
             this.isAddPoint = true;
             this.time = 0;
         });
-
         Global.eventListener.on("STOP", () => {
             this.isAddPoint = false;
             this.pointList.length = 0;
             this.isPlay = false;
         });
-
         Global.eventListener.on("CLICK_SAVE", () => {
 
             let ss: Array<number> = new Array();
@@ -124,11 +116,9 @@ export default class Test extends BaseDraw {
 
             Global.eventListener.fire("SAVE", JSON.stringify(ss));
         });
-
         Global.eventListener.on("SET_CHANGE_PLAY_TIME", (time: number) => {
             this.playTime = time;
         });
-
         Global.eventListener.on("CONTROL_MODE_CHANGE", () => {
             this.isAddPoint = false;
             this.isPlay = false;
@@ -152,7 +142,6 @@ export default class Test extends BaseDraw {
                 }
             }
         });
-
         Global.eventListener.on("DRAG_START", (name: string) => {
             cc.log("-----------DRAG_START-----------");
             // name: NodeXXX
@@ -250,6 +239,26 @@ export default class Test extends BaseDraw {
                 cc.log(bezierIndex);
             }
         });
+    }
+    onDestroy() {
+        Global.eventListener.off("ADD_SPLINE");
+        Global.eventListener.off("DELETE_SPLINE");
+        Global.eventListener.off("DELETE_ALL_SPLINE");
+        Global.eventListener.off("EDITOR_SCALE_SMALL");
+        Global.eventListener.off("EDITOR_SCALE_BIG");
+        Global.eventListener.off("EDITOR_SCALE_RESTORE");
+        Global.eventListener.off("ARROW_L");
+        Global.eventListener.off("ARROW_U");
+        Global.eventListener.off("ARROW_R");
+        Global.eventListener.off("ARROW_D");
+        Global.eventListener.off("PLAY");
+        Global.eventListener.off("STOP");
+        Global.eventListener.off("CLICK_SAVE");
+        Global.eventListener.off("SET_CHANGE_PLAY_TIME");
+        Global.eventListener.off("CONTROL_MODE_CHANGE");
+        Global.eventListener.off("DRAG_START");
+        Global.eventListener.off("DRAG_MOVE");
+        Global.eventListener.off("DRAG_END");
     }
 
     addBezierNode() {

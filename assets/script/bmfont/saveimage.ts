@@ -1,21 +1,40 @@
+/**
+ * 通过Renderer功能保存图片
+ */
+import Global from "../global";
+
 const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class SaveImage extends cc.Component {
-    camera: cc.Camera;
-    texture: cc.RenderTexture;
+
+    @property(cc.Camera)
+    camera: cc.Camera = null;
+    _texture: cc.RenderTexture;
     _canvas: HTMLCanvasElement;
-    targetNode: any;
+
     onLoad() {
-        this.init();
+        // 注册事件
+        Global.eventListener.on("GENERATE_IMAGE", () => {
+            this.init();
+            this.downloadImg();
+        });
     }
+
+    onDestroy() {
+        Global.eventListener.off("GENERATE_IMAGE");
+    }
+
+    /**
+     * 初始化
+     */
     init() {
         let texture =  new cc.RenderTexture();
-        let gl = cc.game._renderContextl;
+        let gl = cc.game._renderContext;
         texture.initWithSize(this.node.width, this.node.height, gl.STENCIL_INDEX8);
-        this.camera = this.node.addComponent(cc.Camera);
         this.camera.targetTexture = texture;
-        this.texture = texture;
+        this.camera.node.position = cc.v2(this.node.width * 0.5, -this.node.height * 0.5);
+        this._texture = texture;
     }
 
     initImage() {
@@ -25,9 +44,12 @@ export default class SaveImage extends cc.Component {
         return img;
     }
 
+    /**
+     * 读取渲染的数据
+     */
     createSprite() {
-        let width = this.texture.width;
-        let height = this.texture.height;
+        let width = this._texture.width;
+        let height = this._texture.height;
         if (!this._canvas) {
             this._canvas = document.createElement("canvas");
             this._canvas.width = width;
@@ -36,8 +58,8 @@ export default class SaveImage extends cc.Component {
             this.clearCanvas();
         }
         let ctx = this._canvas.getContext("2d");
-        this.camera.render();
-        let data = this.texture.readPixels();
+        this.camera.render(this.node);
+        let data = this._texture.readPixels();
         let rowBytes = width * 4;
         for (let row = 0; row < height; row++) {
             let srow = height - 1 - row;
@@ -51,19 +73,12 @@ export default class SaveImage extends cc.Component {
         }
         return this._canvas;
     }
-    getTargetArea() {
-        let targetPos = this.targetNode.convertToWorldSpaceAR(cc.v2(0, 0))
-        let y = cc.winSize.height - targetPos.y - this.targetNode.height / 2;
-        let x = cc.winSize.width - targetPos.x - this.targetNode.width / 2;
-        return {
-            x,
-            y
-        }
-    }
+
+    /**
+     * 下载打包好的图片
+     */
     downloadImg() {
         this.createSprite();
-        var img = this.initImage();
-        this.showSprite(img)
         var dataURL = this._canvas.toDataURL("image/png")
         var a = document.createElement("a")
         a.href = dataURL;
@@ -72,46 +87,10 @@ export default class SaveImage extends cc.Component {
         a.click();
         document.body.removeChild(a);
     }
-    showSprite(img: HTMLImageElement) {
-        let y = this.getTargetArea().y;
-        let x = this.getTargetArea().x;
-        let rect = new cc.Rect(x, y, 770, 800)
-        let texture = new cc.Texture2D();
-        texture.initWithElement(img);
- 
-        let spriteFrame = new cc.SpriteFrame();
-        spriteFrame.setTexture(texture);
-        spriteFrame.setRect(rect)
- 
-        let node = new cc.Node();
-        let sprite = node.addComponent(cc.Sprite);
-        sprite.spriteFrame = spriteFrame;
- 
-        node.zIndex = cc.macro.MAX_ZINDEX;
-        node.parent = cc.director.getScene();
-        // set position
-        let width = cc.winSize.width;
-        let height = cc.winSize.height;
-        node.x = width / 2;
-        node.y = height / 2;
-        node.on(cc.Node.EventType.TOUCH_START, () => {
-            node.parent = null;
-            node.destroy();
-        });
-        this.captureAction(node, width, height);
-    }
-    captureAction(capture, width, height) {
-        let scaleAction = cc.scaleTo(1, 0.3);
-        let targetPos = cc.v2(width - width / 6, height / 4);
-        let moveAction = cc.moveTo(1, targetPos);
-        let spawn = cc.spawn(scaleAction, moveAction);
- 
-        let finished = cc.callFunc(() => {
-            capture.destroy();
-        })
-        let action = cc.sequence(spawn, finished);
-        capture.runAction(action);
-    }
+
+    /**
+     * 清除Canvas
+     */
     clearCanvas() {
         let ctx = this._canvas.getContext('2d');
         ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);

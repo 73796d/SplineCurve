@@ -17,6 +17,9 @@ export default class UI extends cc.Component {
             this.saveToFile(text);
         });
     }
+    onDestroy() {
+        Global.eventListener.off("SAVE");
+    }
 
     createFileLoader() {
         if (cc.sys.isBrowser) {
@@ -171,4 +174,9 @@ export default class UI extends cc.Component {
         cc.log(Global.controlMode)  
         Global.eventListener.fire("CONTROL_MODE_CHANGE");
     }
+
+    onBackMain() {
+        cc.director.loadScene("Menu");
+    }
+
 }
