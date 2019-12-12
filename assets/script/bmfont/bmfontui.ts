@@ -300,8 +300,12 @@ export default class BMFontUI extends cc.Component {
     onBackMain() {
         Global.eventListener.off("REMOVE_ITEM");
         Global.eventListener.off("CHANGE_CHAR");
-        document.getElementsByTagName("body")[0].removeChild(this.input);
-        document.getElementsByTagName("body")[0].removeChild(this.zone);
+        if (this.input) {
+            document.getElementsByTagName("body")[0].removeChild(this.input);
+        }
+        if (this.zone) {
+          document.getElementsByTagName("body")[0].removeChild(this.zone);  
+        }
         cc.director.loadScene("Menu");
     }
 
