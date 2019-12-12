@@ -129,8 +129,8 @@ export default class UI extends cc.Component {
         Global.eventListener.fire("STOP");
     }
 
-    onClickSave() {
-        Global.eventListener.fire("CLICK_SAVE");
+    onClickSave(button, customEventData) {
+        Global.eventListener.fire("CLICK_SAVE", customEventData);
     }
 
     onCheckEdit(toggle: cc.Toggle, customEventData) {

@@ -36,6 +36,10 @@ export default class BMFontUI extends cc.Component {
     itemMgr: ItemMgr = null; // item 管理器
     itemList: Array<Item> = new Array<Item>(); // item 数组
 
+    fileName: string = "default";
+
+    packItemList: Array<Item> = null;
+
     onLoad() {
         this.itemMgr = cc.find("Canvas/ItemMgr").getComponent(ItemMgr);
         this.createDragZone(); // 创建拖拽区域
@@ -173,6 +177,14 @@ export default class BMFontUI extends cc.Component {
         }
     }
 
+    onFileNameDidEnd(editbox: cc.EditBox) {
+        let fileName = editbox.string;
+        if (fileName === "") {
+            fileName = editbox.placeholder;
+        }
+        this.fileName = fileName;
+    }
+
     // 增
     createItem(texture, imgPath, size) {
         // id 从1开始
@@ -233,10 +245,19 @@ export default class BMFontUI extends cc.Component {
         // sp.anchorY = 1;
         // sp.position = cc.v2(0, 0);
         // spc.drawRectPoint(cc.v2(0, -height), cc.Color.RED, width, height, false);
+
+        if(this.packItemList === null) {
+            this.packItemList = new Array<Item>();
+        } else {
+            this.packItemList.length = 0;
+        }
         for (let i = 0; i < packs.length; i++) {
             let rect = packs[i] as Rect;
             let id = rect.id;
             let itemData = this.getItemDataById(id);
+            itemData.imgSize.x = rect.x;
+            itemData.imgSize.y = rect.y;
+            this.packItemList.push(itemData);
             let sp = new cc.Node();
             let spc = sp.addComponent(cc.Sprite);
             sp.parent = this.imageScrollView.content;
@@ -245,15 +266,35 @@ export default class BMFontUI extends cc.Component {
             sp.position = cc.v2(rect.x, -rect.y);
             spc.spriteFrame = new cc.SpriteFrame(itemData.img);
         }
-
-        FontUtil.genFontFnt("12212", packs, 12, 12, 12, packs.length, 12);
     }
 
     /**
      * 生成bmf回调, 通过Camera制作
      */
     onGenerateBMF() {
-        Global.eventListener.fire("GENERATE_IMAGE");
+        if (this.packItemList) {
+            Global.eventListener.fire("GENERATE_IMAGE", this.fileName);
+            let spaceWidth = 10; // 空格宽度
+            let lineHeight = 10; // 行高
+            for (let i = 0; i < this.packItemList.length; i++) {
+                let packItem = this.packItemList[i];
+                if (packItem.imgSize.width > spaceWidth) {
+                    spaceWidth = packItem.imgSize.width;
+                }
+                if (packItem.imgSize.height > lineHeight) {
+                    lineHeight = packItem.imgSize.height;
+                }
+            }
+
+            FontUtil.genFontFnt(
+                this.fileName, 
+                this.packItemList, 
+                lineHeight, 
+                this.imageScrollView.content.width, 
+                this.imageScrollView.content.height, 
+                this.packItemList.length, 
+                spaceWidth);
+        }
     }
 
     onBackMain() {

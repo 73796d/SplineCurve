@@ -101,20 +101,29 @@ export default class Test extends BaseDraw {
             this.pointList.length = 0;
             this.isPlay = false;
         });
-        Global.eventListener.on("CLICK_SAVE", () => {
-
-            let ss: Array<number> = new Array();
-            for (let i = 0; i < this.pointList.length; i++) {
-                let nexti = i + 1;
-                if (nexti !== this.pointList.length) {
-                    let point1 = this.pointList[i];
-                    let point2 = this.pointList[nexti];
-
-                    ss.push(point1.sub(point2).mag());
+        Global.eventListener.on("CLICK_SAVE", (data) => {
+            if (data === "path") {
+                let pointList: Array<cc.Vec2> = new Array();
+                for (let i = 0; i < this.pointList.length; i++) {
+                    let point = this.pointList[i];
+                    let newPoint = new cc.Vec2(parseFloat(point.x.toFixed(2)), parseFloat(point.y.toFixed(2)));
+                    pointList.push(newPoint);
                 }
+                Global.eventListener.fire("SAVE", JSON.stringify(pointList));
+            } else if (data === "ctrl") {
+                let bezierList  = [];
+                for (let i = 0; i < this.bezierNodeList.length; i++) {
+                    let bezierNode = this.bezierNodeList[i];
+                    let bezier = {
+                        p0: bezierNode.p0p,
+                        p1: bezierNode.p1p,
+                        p2: bezierNode.p2p,
+                        p3: bezierNode.p3p
+                    };
+                    bezierList.push(bezier);
+                }
+                Global.eventListener.fire("SAVE", JSON.stringify(bezierList));
             }
-
-            Global.eventListener.fire("SAVE", JSON.stringify(ss));
         });
         Global.eventListener.on("SET_CHANGE_PLAY_TIME", (time: number) => {
             this.playTime = time;

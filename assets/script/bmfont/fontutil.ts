@@ -1,6 +1,7 @@
 import { FontBinPacker } from "./fontbinpacker";
 import { Rect } from "./rect";
 import BinPackBuilder from "./binpackbuilder";
+import Item from "./item";
 
 export class FontUtil {
 
@@ -18,18 +19,32 @@ export class FontUtil {
         return binBuilder;
     }
 
-
-    public static genFontFnt(fontName, items, dH, w, h, count, sW): boolean {
+    /**
+     * 生成字体描述文件
+     * @param fontName 文件名
+     * @param items 打包项数组
+     * @param lH 行高
+     * @param w 图片宽
+     * @param h 图片高
+     * @param count 数量
+     * @param sW 空格宽度
+     */
+    public static genFontFnt(fontName, items, lH, w, h, count, sW): boolean {
         let info =  FontUtil.genInfo(fontName, "0", "0", "0", "ANSI", "0", "0", "1", "1", "0,0,0,0", "0,0");
-        info += FontUtil.genCommon(dH.toString(), "0", w.toString(), h.toString(), "1", "0");
+        info += FontUtil.genCommon(lH.toString(), "0", w.toString(), h.toString(), "1", "0");
         info += FontUtil.genPage("0", fontName + ".png");
         info += FontUtil.genChars(count + 1);
         info += FontUtil.genChar(this.getCharId(" ").toString(), "0", "0", "0", "0", "0", "0", sW.toString(), "0", "0");
         for (let i = 0; i < items.length; i++) {
-            let item = items[i];
-            info += FontUtil.genChar(this.getCharId(item.char).toString(), "0", "21", "21", "21", "21", "21", "21", "21", "21");
+            let item = items[i] as Item;
+            info += FontUtil.genChar(this.getCharId(item.char).toString(), 
+            item.imgSize.x.toString(),
+            item.imgSize.y.toString(), 
+            item.imgSize.width.toString(), 
+            item.imgSize.height.toString(), 
+            "0", "0", item.imgSize.width.toString(), "0", "0");
         }
-        FontUtil.saveToFile(info);
+        FontUtil.saveToFile(info, fontName);
 		return true;
     }
 
@@ -167,10 +182,10 @@ export class FontUtil {
      * @param text 
      * @param fileName 
      */
-    public static saveToFile(text: string, fileName: string = "font.fnt") {
+    public static saveToFile(text: string, fileName: string = "default.fnt") {
         if (cc.sys.isBrowser) {
             let textFileAsBlob = new Blob([text], {type: "text/plain"});
-            let fileNameToSaveAs = "filename.fnt";
+            let fileNameToSaveAs = fileName + ".fnt";
             let downloadLink = document.createElement("a");
             downloadLink.download = fileNameToSaveAs;
             downloadLink.innerHTML = "Download File";

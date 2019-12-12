@@ -15,9 +15,9 @@ export default class SaveImage extends cc.Component {
 
     onLoad() {
         // 注册事件
-        Global.eventListener.on("GENERATE_IMAGE", () => {
+        Global.eventListener.on("GENERATE_IMAGE", (fileName) => {
             this.init();
-            this.downloadImg();
+            this.downloadImg(fileName);
         });
     }
 
@@ -77,12 +77,12 @@ export default class SaveImage extends cc.Component {
     /**
      * 下载打包好的图片
      */
-    downloadImg() {
+    downloadImg(fileName) {
         this.createSprite();
         var dataURL = this._canvas.toDataURL("image/png")
         var a = document.createElement("a")
         a.href = dataURL;
-        a.download = "image";
+        a.download = fileName + ".png";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
